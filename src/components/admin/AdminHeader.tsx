@@ -1,8 +1,17 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Settings, LayoutDashboard, Users, Eye } from 'lucide-react';
+import { Settings, LayoutDashboard, Users, Eye, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export function AdminHeader() {
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
   return (
     <header className="glass-card border-b border-border/50 sticky top-0 z-50">
       <div className="container flex items-center justify-between h-16">
@@ -38,6 +47,15 @@ export function AdminHeader() {
               Ver Rifa
             </Button>
           </Link>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="gap-2 text-destructive hover:bg-destructive/10"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4" />
+            Salir
+          </Button>
         </nav>
       </div>
     </header>

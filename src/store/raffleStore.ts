@@ -20,7 +20,8 @@ const defaultConfig: RaffleConfig = {
   prizeImage: '',
   bannerImage: '',
   drawDate: '2024-12-31',
-  totalNumbers: 100,
+  startNumber: 1000,
+  endNumber: 9999,
   priceOne: 10,
   priceTwo: 18,
   priceThree: 25,
@@ -56,7 +57,10 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
   
   getAvailableNumbers: () => {
     const { config, soldNumbers } = get();
-    const allNumbers = Array.from({ length: config.totalNumbers }, (_, i) => i + 1);
+    const allNumbers = Array.from(
+      { length: config.endNumber - config.startNumber + 1 }, 
+      (_, i) => config.startNumber + i
+    );
     return allNumbers.filter(n => !soldNumbers.includes(n));
   },
   

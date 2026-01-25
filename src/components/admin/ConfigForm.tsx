@@ -76,6 +76,39 @@ export function ConfigForm() {
           </div>
           
           <div className="space-y-2">
+            <Label>Número Inicial</Label>
+            <Input
+              type="number"
+              value={localConfig.startNumber}
+              onChange={(e) => setLocalConfig(prev => ({ ...prev, startNumber: parseInt(e.target.value) || 0 }))}
+              className="bg-input"
+              min={0}
+              placeholder="1000"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Número Final</Label>
+            <Input
+              type="number"
+              value={localConfig.endNumber}
+              onChange={(e) => setLocalConfig(prev => ({ ...prev, endNumber: parseInt(e.target.value) || 9999 }))}
+              className="bg-input"
+              min={localConfig.startNumber + 1}
+              placeholder="9999"
+            />
+          </div>
+          
+          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl md:col-span-2">
+            <div>
+              <Label>Total de Boletas</Label>
+              <p className="text-sm text-muted-foreground">
+                {localConfig.endNumber - localConfig.startNumber + 1} números disponibles
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Calendar className="w-4 h-4" /> Fecha del Sorteo
             </Label>
@@ -84,18 +117,6 @@ export function ConfigForm() {
               value={localConfig.drawDate}
               onChange={(e) => setLocalConfig(prev => ({ ...prev, drawDate: e.target.value }))}
               className="bg-input"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Total de Números</Label>
-            <Input
-              type="number"
-              value={localConfig.totalNumbers}
-              onChange={(e) => setLocalConfig(prev => ({ ...prev, totalNumbers: parseInt(e.target.value) || 100 }))}
-              className="bg-input"
-              min={10}
-              max={1000}
             />
           </div>
           

@@ -1,26 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRaffleStore } from '@/store/raffleStore';
 import { TicketPurchase } from '@/types/raffle';
-import { Loader2, CheckCircle, Mail, Phone, User } from 'lucide-react';
+import { Loader2, CheckCircle, Mail, Phone, User, Shuffle, Ticket } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PurchaseFormProps {
   selectedQuantity: number;
-  selectedNumbers: number[];
   onPurchaseComplete: (purchase: TicketPurchase) => void;
 }
 
-export function PurchaseForm({ selectedQuantity, selectedNumbers, onPurchaseComplete }: PurchaseFormProps) {
-  const { config, addPurchase } = useRaffleStore();
+export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseFormProps) {
+  const { config, addPurchase, generateRandomNumbers } = useRaffleStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [assignedNumbers, setAssignedNumbers] = useState<number[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: ''
   });
+
+  // Generar números aleatorios cuando cambia la cantidad
+  useEffect(() => {
+    const numbers = generateRandomNumbers(selectedQuantity);
+    setAssignedNumbers(numbers);
+  }, [selectedQuantity, generateRandomNumbers]);
+
+  const handleRegenerateNumbers = () => {
+    const numbers = generateRandomNumbers(selectedQuantity);
+    setAssignedNumbers(numbers);
+    toast.success('¡Nuevos números asignados!');
+  };
 
   const getPrice = () => {
     switch (selectedQuantity) {
@@ -34,8 +46,8 @@ export function PurchaseForm({ selectedQuantity, selectedNumbers, onPurchaseComp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (selectedNumbers.length !== selectedQuantity) {
-      toast.error(`Debes tener ${selectedQuantity} número(s) seleccionado(s)`);
+    if (assignedNumbers.length !== selectedQuantity) {
+      toast.error(`Error al asignar números. Intenta de nuevo.`);
       return;
     }
 
@@ -50,7 +62,7 @@ export function PurchaseForm({ selectedQuantity, selectedNumbers, onPurchaseComp
       buyerName: formData.name,
       buyerEmail: formData.email,
       buyerPhone: formData.phone,
-      ticketNumbers: selectedNumbers,
+      ticketNumbers: assignedNumbers,
       quantity: selectedQuantity,
       totalPrice: getPrice(),
       purchaseDate: new Date().toISOString(),
@@ -72,16 +84,49 @@ export function PurchaseForm({ selectedQuantity, selectedNumbers, onPurchaseComp
         Completa tu compra
       </h3>
       
+      {/* Números asignados */}
+      <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-6 border border-primary/20">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Ticket className="w-5 h-5 text-primary" />
+            <span className="font-semibold">Tus números asignados</span>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleRegenerateNumbers}
+            className="gap-2 border-primary/50 hover:bg-primary/10"
+          >
+            <Shuffle className="w-4 h-4" />
+            Cambiar
+          </Button>
+        </div>
+        
+        <div className="flex flex-wrap gap-3 justify-center">
+          {assignedNumbers.map((num) => (
+            <div
+              key={num}
+              className="w-16 h-16 rounded-xl gold-gradient flex items-center justify-center shadow-lg"
+            >
+              <span className="text-xl font-display font-bold text-primary-foreground">
+                {num.toString().padStart(4, '0')}
+              </span>
+            </div>
+          ))}
+        </div>
+        
+        {assignedNumbers.length === 0 && (
+          <div className="text-center text-muted-foreground py-4">
+            No hay números disponibles
+          </div>
+        )}
+      </div>
+
       <div className="bg-muted/50 rounded-xl p-4">
         <div className="flex justify-between items-center">
           <span className="text-muted-foreground">Cantidad:</span>
           <span className="font-semibold">{selectedQuantity} boleta(s)</span>
-        </div>
-        <div className="flex justify-between items-center mt-2">
-          <span className="text-muted-foreground">Números:</span>
-          <span className="font-display text-primary">
-            {selectedNumbers.map(n => n.toString().padStart(2, '0')).join(', ') || 'Pendiente'}
-          </span>
         </div>
         <div className="border-t border-border my-3" />
         <div className="flex justify-between items-center">
@@ -141,7 +186,7 @@ export function PurchaseForm({ selectedQuantity, selectedNumbers, onPurchaseComp
       <Button 
         type="submit" 
         className="w-full gold-gradient text-primary-foreground font-bold py-6 text-lg hover:opacity-90 transition-opacity"
-        disabled={isLoading || selectedNumbers.length !== selectedQuantity}
+        disabled={isLoading || assignedNumbers.length !== selectedQuantity}
       >
         {isLoading ? (
           <>

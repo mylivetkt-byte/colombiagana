@@ -16,7 +16,10 @@ export function TicketGrid({
 }: TicketGridProps) {
   const { config, soldNumbers } = useRaffleStore();
   
-  const allNumbers = Array.from({ length: config.totalNumbers }, (_, i) => i + 1);
+  const allNumbers = Array.from(
+    { length: config.endNumber - config.startNumber + 1 }, 
+    (_, i) => config.startNumber + i
+  );
   
   const filteredNumbers = allNumbers.filter(num => {
     if (showOnly === 'available') return !soldNumbers.includes(num);

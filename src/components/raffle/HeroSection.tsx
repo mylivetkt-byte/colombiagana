@@ -3,8 +3,9 @@ import { Calendar, Trophy, Ticket } from 'lucide-react';
 
 export function HeroSection() {
   const { config, soldNumbers } = useRaffleStore();
-  const availableCount = config.totalNumbers - soldNumbers.length;
-  const soldPercentage = (soldNumbers.length / config.totalNumbers) * 100;
+  const totalNumbers = config.endNumber - config.startNumber + 1;
+  const availableCount = totalNumbers - soldNumbers.length;
+  const soldPercentage = (soldNumbers.length / totalNumbers) * 100;
 
   return (
     <section className="relative py-20 overflow-hidden">
@@ -52,7 +53,7 @@ export function HeroSection() {
               <Ticket className="w-6 h-6 text-accent mx-auto mb-2" />
               <div className="text-sm text-muted-foreground">Boletas disponibles</div>
               <div className="font-display text-xl gold-text">
-                {availableCount} / {config.totalNumbers}
+                {availableCount} / {totalNumbers}
               </div>
             </div>
             

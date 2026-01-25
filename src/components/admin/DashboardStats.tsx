@@ -4,6 +4,8 @@ import { Ticket, DollarSign, Users, TrendingUp } from 'lucide-react';
 export function DashboardStats() {
   const { config, purchases, soldNumbers } = useRaffleStore();
   
+  const totalNumbers = config.endNumber - config.startNumber + 1;
+  
   const totalRevenue = purchases
     .filter(p => p.paymentStatus === 'verified')
     .reduce((sum, p) => sum + p.totalPrice, 0);
@@ -16,7 +18,7 @@ export function DashboardStats() {
     {
       label: 'Boletas Vendidas',
       value: soldNumbers.length,
-      total: config.totalNumbers,
+      total: totalNumbers,
       icon: Ticket,
       color: 'from-primary to-gold-dark'
     },
@@ -36,7 +38,7 @@ export function DashboardStats() {
     },
     {
       label: 'Tasa de Conversión',
-      value: `${((soldNumbers.length / config.totalNumbers) * 100).toFixed(1)}%`,
+      value: `${((soldNumbers.length / totalNumbers) * 100).toFixed(1)}%`,
       subtitle: 'del total vendido',
       icon: TrendingUp,
       color: 'from-purple-500 to-purple-700'

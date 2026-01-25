@@ -6,7 +6,8 @@ export interface RaffleConfig {
   prizeImage: string;
   bannerImage: string;
   drawDate: string;
-  totalNumbers: number;
+  startNumber: number;
+  endNumber: number;
   priceOne: number;
   priceTwo: number;
   priceThree: number;

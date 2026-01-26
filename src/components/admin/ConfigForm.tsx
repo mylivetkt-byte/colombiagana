@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Save, Plus, X, Image, DollarSign, Calendar, Hash, Loader2 } from 'lucide-react';
+import { Save, Plus, X, Image, DollarSign, Calendar, Hash, Loader2, CreditCard } from 'lucide-react';
+import { PaymentMethodsForm } from './PaymentMethodsForm';
 
 export function ConfigForm() {
   const { config, setConfig, saveConfig, loadConfig, isLoading } = useRaffleStore();
@@ -292,6 +293,21 @@ export function ConfigForm() {
             ))}
           </ul>
         </div>
+      </div>
+
+      {/* Métodos de Pago */}
+      <div className="glass-card p-6">
+        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center">
+            <CreditCard className="w-4 h-4 text-primary-foreground" />
+          </div>
+          Métodos de Pago
+        </h2>
+        
+        <PaymentMethodsForm
+          paymentMethods={localConfig.paymentMethods || []}
+          onChange={(methods) => setLocalConfig(prev => ({ ...prev, paymentMethods: methods }))}
+        />
       </div>
 
       <Button 

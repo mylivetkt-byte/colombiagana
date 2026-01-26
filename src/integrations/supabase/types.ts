@@ -24,6 +24,7 @@ export type Database = {
           end_number: number
           id: string
           is_active: boolean
+          payment_methods: Json | null
           price_one: number
           price_three: number
           price_two: number
@@ -43,6 +44,7 @@ export type Database = {
           end_number?: number
           id?: string
           is_active?: boolean
+          payment_methods?: Json | null
           price_one?: number
           price_three?: number
           price_two?: number
@@ -62,6 +64,7 @@ export type Database = {
           end_number?: number
           id?: string
           is_active?: boolean
+          payment_methods?: Json | null
           price_one?: number
           price_three?: number
           price_two?: number

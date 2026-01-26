@@ -38,7 +38,8 @@ const defaultConfig: RaffleConfig = {
     'Se realizará con la Lotería Nacional',
     'El ganador será contactado por teléfono y correo',
     'Premio entregado en 24-48 horas'
-  ]
+  ],
+  paymentMethods: []
 };
 
 export const useRaffleStore = create<RaffleState>((set, get) => ({
@@ -84,7 +85,8 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
             priceThree: Number(data.price_three),
             currency: data.currency,
             isActive: data.is_active,
-            specifications: data.specifications || []
+            specifications: data.specifications || [],
+            paymentMethods: (data as any).payment_methods || []
           }
         });
       }
@@ -113,7 +115,8 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
         price_three: config.priceThree,
         currency: config.currency,
         is_active: config.isActive,
-        specifications: config.specifications
+        specifications: config.specifications,
+        payment_methods: JSON.parse(JSON.stringify(config.paymentMethods))
       };
 
       if (configId) {

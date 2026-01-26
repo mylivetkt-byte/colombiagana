@@ -1,3 +1,14 @@
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  type: 'bank_transfer' | 'mobile_payment' | 'other';
+  accountNumber?: string;
+  accountHolder?: string;
+  bankName?: string;
+  instructions?: string;
+  isActive: boolean;
+}
+
 export interface RaffleConfig {
   id: string;
   title: string;
@@ -14,6 +25,7 @@ export interface RaffleConfig {
   currency: string;
   isActive: boolean;
   specifications: string[];
+  paymentMethods: PaymentMethod[];
 }
 
 export interface TicketPurchase {

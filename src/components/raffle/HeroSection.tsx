@@ -9,10 +9,24 @@ export function HeroSection() {
 
   return (
     <section className="relative py-20 overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-navy/30" />
-      <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
+      {/* Banner Background */}
+      {config.bannerImage && (
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${config.bannerImage})` }}
+        >
+          <div className="absolute inset-0 bg-background/85 backdrop-blur-sm" />
+        </div>
+      )}
+      
+      {/* Fallback background effects */}
+      {!config.bannerImage && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-navy/30" />
+          <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
+        </>
+      )}
       
       <div className="container relative z-10">
         <div className="text-center max-w-4xl mx-auto">
@@ -28,6 +42,19 @@ export function HeroSection() {
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 animate-fade-in">
             {config.description}
           </p>
+          
+          {/* Prize Image */}
+          {config.prizeImage && (
+            <div className="mb-8 animate-scale-in">
+              <div className="glass-card p-2 inline-block rounded-2xl overflow-hidden">
+                <img 
+                  src={config.prizeImage} 
+                  alt={config.prize}
+                  className="max-h-64 md:max-h-80 w-auto object-contain rounded-xl"
+                />
+              </div>
+            </div>
+          )}
           
           <div className="glass-card inline-block px-8 py-6 mb-10 animate-scale-in">
             <div className="text-sm text-muted-foreground mb-2">PREMIO</div>

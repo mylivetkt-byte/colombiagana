@@ -40,6 +40,7 @@ export interface TicketPurchase {
   purchaseDate: string;
   paymentStatus: 'pending' | 'verified' | 'cancelled';
   paymentMethod: string;
+  paymentImageUrl?: string;
 }
 
 export interface PricingTier {

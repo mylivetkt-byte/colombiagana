@@ -175,7 +175,8 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
           totalPrice: Number(p.total_price),
           purchaseDate: p.created_at,
           paymentStatus: p.payment_status as 'pending' | 'verified' | 'cancelled',
-          paymentMethod: p.payment_method || 'pending'
+          paymentMethod: p.payment_method || 'pending',
+          paymentImageUrl: p.payment_image_url || undefined
         }));
 
         const soldNumbers = data.flatMap(p => p.ticket_numbers);

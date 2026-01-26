@@ -104,20 +104,23 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
     }
   };
 
-  const paymentMethods = [
-    {
-      name: 'PayPal',
-      icon: Wallet,
-      info: 'pagos@tudominio.com',
-      instructions: 'Envía el pago a esta dirección de PayPal'
-    },
-    {
-      name: 'Transferencia Bancaria',
-      icon: CreditCard,
-      info: 'Banco: XXXX | Cuenta: 1234567890',
-      instructions: 'Realiza la transferencia a esta cuenta'
+  // Usar métodos de pago configurados por el admin
+  const activePaymentMethods = config.paymentMethods?.filter(pm => pm.isActive) || [];
+
+  const getPaymentIcon = (type: string) => {
+    switch (type) {
+      case 'bank_transfer': return CreditCard;
+      case 'mobile_payment': return Wallet;
+      default: return CreditCard;
     }
-  ];
+  };
+
+  const getPaymentInfo = (method: typeof activePaymentMethods[0]) => {
+    if (method.type === 'bank_transfer') {
+      return `${method.bankName ? `Banco: ${method.bankName} | ` : ''}Cuenta: ${method.accountNumber} | Titular: ${method.accountHolder}`;
+    }
+    return `${method.name}: ${method.accountNumber} | Titular: ${method.accountHolder}`;
+  };
 
   return (
     <div className="glass-card p-8 max-w-2xl mx-auto animate-scale-in">
@@ -161,26 +164,38 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
 
       <div className="space-y-4 mb-8">
         <h3 className="font-semibold">Métodos de pago</h3>
-        {paymentMethods.map((method, index) => (
-          <div key={index} className="bg-card border border-border rounded-xl p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <method.icon className="w-5 h-5 text-primary" />
-              <span className="font-medium">{method.name}</span>
-            </div>
-            <p className="text-sm text-muted-foreground mb-2">{method.instructions}</p>
-            <div className="flex items-center gap-2 bg-muted rounded-lg p-2">
-              <code className="flex-1 text-sm">{method.info}</code>
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                className="h-8 w-8"
-                onClick={() => copyToClipboard(method.info)}
-              >
-                <Copy className="w-4 h-4" />
-              </Button>
-            </div>
+        {activePaymentMethods.length > 0 ? (
+          activePaymentMethods.map((method) => {
+            const IconComponent = getPaymentIcon(method.type);
+            const paymentInfo = getPaymentInfo(method);
+            return (
+              <div key={method.id} className="bg-card border border-border rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <IconComponent className="w-5 h-5 text-primary" />
+                  <span className="font-medium">{method.name}</span>
+                </div>
+                {method.instructions && (
+                  <p className="text-sm text-muted-foreground mb-2">{method.instructions}</p>
+                )}
+                <div className="flex items-center gap-2 bg-muted rounded-lg p-2">
+                  <code className="flex-1 text-sm break-all">{paymentInfo}</code>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => copyToClipboard(paymentInfo)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="bg-muted/50 rounded-xl p-4 text-center text-muted-foreground">
+            No hay métodos de pago configurados. Contacta al administrador.
           </div>
-        ))}
+        )}
       </div>
 
       {/* Subida de comprobante */}

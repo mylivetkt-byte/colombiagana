@@ -14,6 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
+      raffle_config: {
+        Row: {
+          banner_image: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          draw_date: string | null
+          end_number: number
+          id: string
+          is_active: boolean
+          price_one: number
+          price_three: number
+          price_two: number
+          prize: string
+          prize_image: string | null
+          specifications: string[] | null
+          start_number: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          banner_image?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          draw_date?: string | null
+          end_number?: number
+          id?: string
+          is_active?: boolean
+          price_one?: number
+          price_three?: number
+          price_two?: number
+          prize?: string
+          prize_image?: string | null
+          specifications?: string[] | null
+          start_number?: number
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          banner_image?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          draw_date?: string | null
+          end_number?: number
+          id?: string
+          is_active?: boolean
+          price_one?: number
+          price_three?: number
+          price_two?: number
+          prize?: string
+          prize_image?: string | null
+          specifications?: string[] | null
+          start_number?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ticket_purchases: {
+        Row: {
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          id: string
+          payment_image_url: string | null
+          payment_method: string | null
+          payment_status: string
+          quantity: number
+          raffle_id: string | null
+          ticket_numbers: number[]
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          created_at?: string
+          id?: string
+          payment_image_url?: string | null
+          payment_method?: string | null
+          payment_status?: string
+          quantity: number
+          raffle_id?: string | null
+          ticket_numbers: number[]
+          total_price: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_email?: string
+          buyer_name?: string
+          buyer_phone?: string
+          created_at?: string
+          id?: string
+          payment_image_url?: string | null
+          payment_method?: string | null
+          payment_status?: string
+          quantity?: number
+          raffle_id?: string | null
+          ticket_numbers?: number[]
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_purchases_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_config"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

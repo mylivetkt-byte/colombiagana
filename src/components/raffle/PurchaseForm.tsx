@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRaffleStore } from '@/store/raffleStore';
 import { TicketPurchase } from '@/types/raffle';
-import { Loader2, CheckCircle, Mail, Phone, User, Shuffle, Ticket } from 'lucide-react';
+import { Loader2, CheckCircle, Mail, Phone, User, Ticket } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PurchaseFormProps {
   selectedQuantity: number;
@@ -13,26 +14,13 @@ interface PurchaseFormProps {
 }
 
 export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseFormProps) {
-  const { config, addPurchase, generateRandomNumbers } = useRaffleStore();
+  const { config, generateRandomNumbers } = useRaffleStore();
   const [isLoading, setIsLoading] = useState(false);
-  const [assignedNumbers, setAssignedNumbers] = useState<number[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: ''
   });
-
-  // Generar números aleatorios cuando cambia la cantidad
-  useEffect(() => {
-    const numbers = generateRandomNumbers(selectedQuantity);
-    setAssignedNumbers(numbers);
-  }, [selectedQuantity, generateRandomNumbers]);
-
-  const handleRegenerateNumbers = () => {
-    const numbers = generateRandomNumbers(selectedQuantity);
-    setAssignedNumbers(numbers);
-    toast.success('¡Nuevos números asignados!');
-  };
 
   const getPrice = () => {
     switch (selectedQuantity) {
@@ -46,35 +34,70 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (assignedNumbers.length !== selectedQuantity) {
-      toast.error(`Error al asignar números. Intenta de nuevo.`);
-      return;
-    }
-
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const purchase: TicketPurchase = {
-      id: Date.now().toString(),
-      raffleId: config.id,
-      buyerName: formData.name,
-      buyerEmail: formData.email,
-      buyerPhone: formData.phone,
-      ticketNumbers: assignedNumbers,
-      quantity: selectedQuantity,
-      totalPrice: getPrice(),
-      purchaseDate: new Date().toISOString(),
-      paymentStatus: 'pending',
-      paymentMethod: 'pending'
-    };
-    
-    addPurchase(purchase);
-    onPurchaseComplete(purchase);
-    setIsLoading(false);
-    
-    toast.success('¡Compra registrada! Procede al pago');
+    try {
+      // Generar números aleatorios al momento de la compra
+      const assignedNumbers = generateRandomNumbers(selectedQuantity);
+      
+      if (assignedNumbers.length !== selectedQuantity) {
+        toast.error('No hay suficientes números disponibles');
+        setIsLoading(false);
+        return;
+      }
+
+      // Guardar en la base de datos
+      const { data: raffleConfig } = await supabase
+        .from('raffle_config')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+
+      const { data, error } = await supabase
+        .from('ticket_purchases')
+        .insert({
+          raffle_id: raffleConfig?.id,
+          buyer_name: formData.name,
+          buyer_email: formData.email,
+          buyer_phone: formData.phone,
+          ticket_numbers: assignedNumbers,
+          quantity: selectedQuantity,
+          total_price: getPrice(),
+          payment_status: 'pending',
+          payment_method: 'pending'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving purchase:', error);
+        toast.error('Error al guardar la compra');
+        setIsLoading(false);
+        return;
+      }
+      
+      const purchase: TicketPurchase = {
+        id: data.id,
+        raffleId: data.raffle_id || '',
+        buyerName: data.buyer_name,
+        buyerEmail: data.buyer_email,
+        buyerPhone: data.buyer_phone,
+        ticketNumbers: data.ticket_numbers,
+        quantity: data.quantity,
+        totalPrice: Number(data.total_price),
+        purchaseDate: data.created_at,
+        paymentStatus: data.payment_status as 'pending' | 'verified' | 'cancelled',
+        paymentMethod: data.payment_method || 'pending'
+      };
+      
+      onPurchaseComplete(purchase);
+      toast.success('¡Compra registrada! Procede al pago');
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al procesar la compra');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -84,43 +107,24 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
         Completa tu compra
       </h3>
       
-      {/* Números asignados */}
+      {/* Información de boletas seleccionadas */}
       <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-6 border border-primary/20">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Ticket className="w-5 h-5 text-primary" />
-            <span className="font-semibold">Tus números asignados</span>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleRegenerateNumbers}
-            className="gap-2 border-primary/50 hover:bg-primary/10"
-          >
-            <Shuffle className="w-4 h-4" />
-            Cambiar
-          </Button>
+        <div className="flex items-center gap-2 mb-4">
+          <Ticket className="w-5 h-5 text-primary" />
+          <span className="font-semibold">Tu selección</span>
         </div>
         
-        <div className="flex flex-wrap gap-3 justify-center">
-          {assignedNumbers.map((num) => (
-            <div
-              key={num}
-              className="w-16 h-16 rounded-xl gold-gradient flex items-center justify-center shadow-lg"
-            >
-              <span className="text-xl font-display font-bold text-primary-foreground">
-                {num.toString().padStart(4, '0')}
-              </span>
-            </div>
-          ))}
-        </div>
-        
-        {assignedNumbers.length === 0 && (
-          <div className="text-center text-muted-foreground py-4">
-            No hay números disponibles
+        <div className="text-center py-4">
+          <div className="text-4xl font-display font-bold gold-text mb-2">
+            {selectedQuantity}
           </div>
-        )}
+          <p className="text-muted-foreground">
+            {selectedQuantity === 1 ? 'Boleta' : 'Boletas'}
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Los números serán asignados automáticamente y enviados a tu correo
+          </p>
+        </div>
       </div>
 
       <div className="bg-muted/50 rounded-xl p-4">
@@ -186,7 +190,7 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
       <Button 
         type="submit" 
         className="w-full gold-gradient text-primary-foreground font-bold py-6 text-lg hover:opacity-90 transition-opacity"
-        disabled={isLoading || assignedNumbers.length !== selectedQuantity}
+        disabled={isLoading}
       >
         {isLoading ? (
           <>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { HeroSection } from '@/components/raffle/HeroSection';
 import { PricingCards } from '@/components/raffle/PricingCards';
@@ -13,7 +13,12 @@ import { Settings } from 'lucide-react';
 export default function Index() {
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [completedPurchase, setCompletedPurchase] = useState<TicketPurchase | null>(null);
-  const { config } = useRaffleStore();
+  const { config, loadConfig, loadPurchases } = useRaffleStore();
+
+  useEffect(() => {
+    loadConfig();
+    loadPurchases();
+  }, []);
 
   const handleQuantitySelect = (quantity: number) => {
     setSelectedQuantity(quantity);

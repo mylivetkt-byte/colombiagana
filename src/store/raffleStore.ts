@@ -1,11 +1,17 @@
 import { create } from 'zustand';
 import { RaffleConfig, TicketPurchase } from '@/types/raffle';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RaffleState {
   config: RaffleConfig;
   purchases: TicketPurchase[];
   soldNumbers: number[];
+  isLoading: boolean;
+  configId: string | null;
   setConfig: (config: Partial<RaffleConfig>) => void;
+  loadConfig: () => Promise<void>;
+  saveConfig: () => Promise<boolean>;
+  loadPurchases: () => Promise<void>;
   addPurchase: (purchase: TicketPurchase) => void;
   updatePurchaseStatus: (id: string, status: TicketPurchase['paymentStatus']) => void;
   getAvailableNumbers: () => number[];
@@ -39,10 +45,144 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
   config: defaultConfig,
   purchases: [],
   soldNumbers: [],
+  isLoading: false,
+  configId: null,
   
   setConfig: (newConfig) => set((state) => ({
     config: { ...state.config, ...newConfig }
   })),
+  
+  loadConfig: async () => {
+    set({ isLoading: true });
+    try {
+      const { data, error } = await supabase
+        .from('raffle_config')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading config:', error);
+        return;
+      }
+
+      if (data) {
+        set({
+          configId: data.id,
+          config: {
+            id: data.id,
+            title: data.title,
+            description: data.description || '',
+            prize: data.prize,
+            prizeImage: data.prize_image || '',
+            bannerImage: data.banner_image || '',
+            drawDate: data.draw_date || '',
+            startNumber: data.start_number,
+            endNumber: data.end_number,
+            priceOne: Number(data.price_one),
+            priceTwo: Number(data.price_two),
+            priceThree: Number(data.price_three),
+            currency: data.currency,
+            isActive: data.is_active,
+            specifications: data.specifications || []
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  saveConfig: async () => {
+    const { config, configId } = get();
+    
+    try {
+      const updateData = {
+        title: config.title,
+        description: config.description,
+        prize: config.prize,
+        prize_image: config.prizeImage,
+        banner_image: config.bannerImage,
+        draw_date: config.drawDate || null,
+        start_number: config.startNumber,
+        end_number: config.endNumber,
+        price_one: config.priceOne,
+        price_two: config.priceTwo,
+        price_three: config.priceThree,
+        currency: config.currency,
+        is_active: config.isActive,
+        specifications: config.specifications
+      };
+
+      if (configId) {
+        const { error } = await supabase
+          .from('raffle_config')
+          .update(updateData)
+          .eq('id', configId);
+
+        if (error) {
+          console.error('Error saving config:', error);
+          return false;
+        }
+      } else {
+        const { data, error } = await supabase
+          .from('raffle_config')
+          .insert(updateData)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error creating config:', error);
+          return false;
+        }
+
+        set({ configId: data.id });
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error:', error);
+      return false;
+    }
+  },
+
+  loadPurchases: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ticket_purchases')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading purchases:', error);
+        return;
+      }
+
+      if (data) {
+        const purchases: TicketPurchase[] = data.map(p => ({
+          id: p.id,
+          raffleId: p.raffle_id || '',
+          buyerName: p.buyer_name,
+          buyerEmail: p.buyer_email,
+          buyerPhone: p.buyer_phone,
+          ticketNumbers: p.ticket_numbers,
+          quantity: p.quantity,
+          totalPrice: Number(p.total_price),
+          purchaseDate: p.created_at,
+          paymentStatus: p.payment_status as 'pending' | 'verified' | 'cancelled',
+          paymentMethod: p.payment_method || 'pending'
+        }));
+
+        const soldNumbers = data.flatMap(p => p.ticket_numbers);
+
+        set({ purchases, soldNumbers });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  },
   
   addPurchase: (purchase) => set((state) => ({
     purchases: [...state.purchases, purchase],

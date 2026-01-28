@@ -13,7 +13,7 @@ interface RaffleState {
   saveConfig: () => Promise<boolean>;
   loadPurchases: () => Promise<void>;
   addPurchase: (purchase: TicketPurchase) => void;
-  updatePurchaseStatus: (id: string, status: TicketPurchase['paymentStatus']) => void;
+  updatePurchaseStatus: (id: string, status: TicketPurchase['paymentStatus']) => Promise<void>;
   getAvailableNumbers: () => number[];
   generateRandomNumbers: (quantity: number) => number[];
 }
@@ -179,7 +179,10 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
           paymentImageUrl: p.payment_image_url || undefined
         }));
 
-        const soldNumbers = data.flatMap(p => p.ticket_numbers);
+        // Solo contar como vendidos los números de compras NO canceladas
+        const soldNumbers = data
+          .filter(p => p.payment_status !== 'cancelled')
+          .flatMap(p => p.ticket_numbers);
 
         set({ purchases, soldNumbers });
       }
@@ -193,11 +196,35 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
     soldNumbers: [...state.soldNumbers, ...purchase.ticketNumbers]
   })),
   
-  updatePurchaseStatus: (id, status) => set((state) => ({
-    purchases: state.purchases.map(p => 
-      p.id === id ? { ...p, paymentStatus: status } : p
-    )
-  })),
+  updatePurchaseStatus: async (id, status) => {
+    try {
+      const { error } = await supabase
+        .from('ticket_purchases')
+        .update({ payment_status: status })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating purchase status:', error);
+        return;
+      }
+
+      // Actualizar estado local y recalcular soldNumbers
+      set((state) => {
+        const updatedPurchases = state.purchases.map(p => 
+          p.id === id ? { ...p, paymentStatus: status } : p
+        );
+        
+        // Recalcular números vendidos excluyendo cancelados
+        const soldNumbers = updatedPurchases
+          .filter(p => p.paymentStatus !== 'cancelled')
+          .flatMap(p => p.ticketNumbers);
+
+        return { purchases: updatedPurchases, soldNumbers };
+      });
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  },
   
   getAvailableNumbers: () => {
     const { config, soldNumbers } = get();

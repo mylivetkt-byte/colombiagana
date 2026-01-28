@@ -61,6 +61,54 @@ export function ConfigForm() {
     }));
   };
 
+  const handleImageUpload = async (
+    file: File, 
+    type: 'prize' | 'banner',
+    setLoading: (loading: boolean) => void
+  ) => {
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no debe superar 5MB');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${type}-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('raffle-images')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Error al subir la imagen');
+        setLoading(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('raffle-images')
+        .getPublicUrl(fileName);
+
+      if (type === 'prize') {
+        setLocalConfig(prev => ({ ...prev, prizeImage: publicUrl }));
+      } else {
+        setLocalConfig(prev => ({ ...prev, bannerImage: publicUrl }));
+      }
+
+      toast.success('Imagen subida exitosamente');
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al procesar la imagen');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -235,29 +283,95 @@ export function ConfigForm() {
         </h2>
         
         <div className="grid gap-6 md:grid-cols-2">
+          {/* Imagen del Premio */}
           <div className="space-y-2">
-            <Label>URL Imagen del Premio</Label>
-            <Input
-              value={localConfig.prizeImage}
-              onChange={(e) => setLocalConfig(prev => ({ ...prev, prizeImage: e.target.value }))}
-              className="bg-input"
-              placeholder="https://..."
+            <Label>Imagen del Premio</Label>
+            <input
+              ref={prizeImageRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageUpload(file, 'prize', setIsUploadingPrize);
+              }}
+              className="hidden"
             />
+            <div className="flex gap-2">
+              <Input
+                value={localConfig.prizeImage}
+                onChange={(e) => setLocalConfig(prev => ({ ...prev, prizeImage: e.target.value }))}
+                className="bg-input flex-1"
+                placeholder="URL de imagen o sube una..."
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => prizeImageRef.current?.click()}
+                disabled={isUploadingPrize}
+                className="shrink-0"
+              >
+                {isUploadingPrize ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
             {localConfig.prizeImage && (
-              <img src={localConfig.prizeImage} alt="Preview" className="mt-2 h-32 object-cover rounded-lg" />
+              <img 
+                src={localConfig.prizeImage} 
+                alt="Preview" 
+                className="mt-2 h-32 object-cover rounded-lg"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
             )}
           </div>
           
+          {/* Imagen Banner */}
           <div className="space-y-2">
-            <Label>URL Imagen Banner</Label>
-            <Input
-              value={localConfig.bannerImage}
-              onChange={(e) => setLocalConfig(prev => ({ ...prev, bannerImage: e.target.value }))}
-              className="bg-input"
-              placeholder="https://..."
+            <Label>Imagen Banner</Label>
+            <input
+              ref={bannerImageRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageUpload(file, 'banner', setIsUploadingBanner);
+              }}
+              className="hidden"
             />
+            <div className="flex gap-2">
+              <Input
+                value={localConfig.bannerImage}
+                onChange={(e) => setLocalConfig(prev => ({ ...prev, bannerImage: e.target.value }))}
+                className="bg-input flex-1"
+                placeholder="URL de imagen o sube una..."
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => bannerImageRef.current?.click()}
+                disabled={isUploadingBanner}
+                className="shrink-0"
+              >
+                {isUploadingBanner ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
             {localConfig.bannerImage && (
-              <img src={localConfig.bannerImage} alt="Preview" className="mt-2 h-32 object-cover rounded-lg" />
+              <img 
+                src={localConfig.bannerImage} 
+                alt="Preview" 
+                className="mt-2 h-32 object-cover rounded-lg"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
             )}
           </div>
         </div>

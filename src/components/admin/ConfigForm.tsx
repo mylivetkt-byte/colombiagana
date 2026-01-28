@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRaffleStore } from '@/store/raffleStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,14 +6,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Save, Plus, X, Image, DollarSign, Calendar, Hash, Loader2, CreditCard } from 'lucide-react';
+import { Save, Plus, X, Image, DollarSign, Calendar, Hash, Loader2, CreditCard, Upload } from 'lucide-react';
 import { PaymentMethodsForm } from './PaymentMethodsForm';
-
+import { supabase } from '@/integrations/supabase/client';
 export function ConfigForm() {
   const { config, setConfig, saveConfig, loadConfig, isLoading } = useRaffleStore();
   const [localConfig, setLocalConfig] = useState(config);
   const [newSpec, setNewSpec] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingPrize, setIsUploadingPrize] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const prizeImageRef = useRef<HTMLInputElement>(null);
+  const bannerImageRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadConfig();

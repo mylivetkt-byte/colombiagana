@@ -6,53 +6,53 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 45 100% 96%;
+    --background: 45 30% 97%;
+    --foreground: 222 47% 15%;
 
-    --card: 222 47% 10%;
-    --card-foreground: 45 100% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 15%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 45 100% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 15%;
 
-    --primary: 43 96% 56%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 43 96% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 50% 25%;
-    --secondary-foreground: 45 100% 96%;
+    --secondary: 210 30% 90%;
+    --secondary-foreground: 222 47% 20%;
 
-    --muted: 222 30% 18%;
-    --muted-foreground: 220 15% 65%;
+    --muted: 45 20% 92%;
+    --muted-foreground: 222 15% 45%;
 
     --accent: 160 84% 39%;
-    --accent-foreground: 45 100% 96%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 45 100% 96%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 222 30% 20%;
-    --input: 222 30% 15%;
-    --ring: 43 96% 56%;
+    --border: 45 20% 85%;
+    --input: 45 20% 90%;
+    --ring: 43 96% 50%;
 
     --radius: 0.75rem;
 
     /* Custom raffle tokens */
-    --gold: 43 96% 56%;
-    --gold-light: 45 100% 70%;
-    --gold-dark: 40 90% 45%;
-    --navy: 210 50% 15%;
-    --navy-light: 210 45% 25%;
+    --gold: 43 96% 50%;
+    --gold-light: 45 100% 65%;
+    --gold-dark: 40 90% 40%;
+    --navy: 210 50% 25%;
+    --navy-light: 210 45% 35%;
     --emerald: 160 84% 39%;
-    --ticket-bg: 222 47% 12%;
-    --gradient-gold: linear-gradient(135deg, hsl(45, 100%, 70%) 0%, hsl(43, 96%, 56%) 50%, hsl(40, 90%, 45%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(222, 47%, 6%) 0%, hsl(222, 47%, 10%) 50%, hsl(210, 50%, 15%) 100%);
-    --shadow-gold: 0 0 30px hsl(43 96% 56% / 0.3);
-    --shadow-glow: 0 0 60px hsl(43 96% 56% / 0.2);
+    --ticket-bg: 45 20% 95%;
+    --gradient-gold: linear-gradient(135deg, hsl(45, 100%, 65%) 0%, hsl(43, 96%, 50%) 50%, hsl(40, 90%, 40%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(45, 30%, 97%) 0%, hsl(45, 25%, 94%) 50%, hsl(45, 20%, 90%) 100%);
+    --shadow-gold: 0 0 30px hsl(43 96% 50% / 0.25);
+    --shadow-glow: 0 0 60px hsl(43 96% 50% / 0.15);
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 45 100% 96%;
+    --background: 45 30% 97%;
+    --foreground: 222 47% 15%;
   }
 }
 

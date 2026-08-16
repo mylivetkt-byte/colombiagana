@@ -1,0 +1,1 @@
+UPDATE public.raffle_config SET prize_image = 'https://czmhenpdxolvfjecmcmi.supabase.co/storage/v1/object/public/raffle-images/prize-iphone-17-pro-max.png', banner_image = '' WHERE prize_image LIKE 'https://itechcolombia.co/product%' OR banner_image LIKE 'https://itechcolombia.co/product%';

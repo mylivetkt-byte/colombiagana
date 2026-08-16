@@ -102,6 +102,11 @@ export function HeroSection() {
               <div className="text-sm mt-1 font-medium">{soldPercentage.toFixed(0)}% vendido</div>
             </div>
           </div>
+
+          <div className="mt-10">
+            <ShareRaffle title={config.title} />
+          </div>
+
         </div>
       </div>
     </section>

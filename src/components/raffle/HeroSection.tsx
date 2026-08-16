@@ -1,5 +1,7 @@
 import { useRaffleStore } from '@/store/raffleStore';
 import { Calendar, Trophy, Ticket } from 'lucide-react';
+import { Countdown } from './Countdown';
+import { ShareRaffle } from './ShareRaffle';
 
 export function HeroSection() {
   const { config, soldNumbers } = useRaffleStore();

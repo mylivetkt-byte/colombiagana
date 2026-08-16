@@ -50,6 +50,8 @@ export function HeroSection() {
                 <img 
                   src={config.prizeImage} 
                   alt={config.prize}
+                  loading="lazy"
+                  onError={(e) => { (e.currentTarget.parentElement?.parentElement as HTMLElement).style.display = 'none'; }}
                   className="max-h-64 md:max-h-80 w-auto object-contain rounded-xl"
                 />
               </div>

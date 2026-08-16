@@ -6,6 +6,7 @@ import { useRaffleStore } from '@/store/raffleStore';
 import { TicketPurchase } from '@/types/raffle';
 import { Loader2, CheckCircle, Mail, Phone, User, Ticket } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatMoney } from '@/lib/format';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PurchaseFormProps {
@@ -136,7 +137,7 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
         <div className="flex justify-between items-center">
           <span className="text-lg font-semibold">Total:</span>
           <span className="text-2xl font-display gold-text">
-            ${getPrice()} {config.currency}
+            {formatMoney(getPrice(), config.currency)} {config.currency}
           </span>
         </div>
       </div>
@@ -198,7 +199,7 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
             Procesando...
           </>
         ) : (
-          <>Continuar al pago - ${getPrice()} {config.currency}</>
+          <>Continuar al pago - {formatMoney(getPrice(), config.currency)} {config.currency}</>
         )}
       </Button>
     </form>

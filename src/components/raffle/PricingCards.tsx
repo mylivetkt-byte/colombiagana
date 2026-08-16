@@ -2,6 +2,7 @@ import { useRaffleStore } from '@/store/raffleStore';
 import { PricingTier } from '@/types/raffle';
 import { Ticket, Sparkles, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatMoney } from '@/lib/format';
 
 interface PricingCardsProps {
   selectedQuantity: number;
@@ -22,7 +23,7 @@ export function PricingCards({ selectedQuantity, onSelect }: PricingCardsProps) 
       price: config.priceTwo,
       label: 'Dos Boletas',
       savings: config.priceOne * 2 > config.priceTwo 
-        ? `Ahorras $${(config.priceOne * 2 - config.priceTwo).toFixed(0)}` 
+        ? `Ahorras ${formatMoney(config.priceOne * 2 - config.priceTwo, config.currency)}` 
         : undefined
     },
     {
@@ -30,7 +31,7 @@ export function PricingCards({ selectedQuantity, onSelect }: PricingCardsProps) 
       price: config.priceThree,
       label: 'Tres Boletas',
       savings: config.priceOne * 3 > config.priceThree 
-        ? `Ahorras $${(config.priceOne * 3 - config.priceThree).toFixed(0)}` 
+        ? `Ahorras ${formatMoney(config.priceOne * 3 - config.priceThree, config.currency)}` 
         : undefined
     }
   ];
@@ -75,7 +76,7 @@ export function PricingCards({ selectedQuantity, onSelect }: PricingCardsProps) 
               
               <div className="mb-4">
                 <span className="text-4xl font-display gold-text">
-                  ${tier.price}
+                  {formatMoney(tier.price, config.currency)}
                 </span>
                 <span className="text-muted-foreground ml-1">{config.currency}</span>
               </div>

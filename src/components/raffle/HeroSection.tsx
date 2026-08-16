@@ -1,5 +1,7 @@
 import { useRaffleStore } from '@/store/raffleStore';
 import { Calendar, Trophy, Ticket } from 'lucide-react';
+import { Countdown } from './Countdown';
+import { ShareRaffle } from './ShareRaffle';
 
 export function HeroSection() {
   const { config, soldNumbers } = useRaffleStore();
@@ -64,8 +66,11 @@ export function HeroSection() {
               {config.prize}
             </div>
           </div>
-          
+
+          <Countdown date={config.drawDate} />
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
+
             <div className="glass-card p-4">
               <Calendar className="w-6 h-6 text-primary mx-auto mb-2" />
               <div className="text-sm text-muted-foreground">Fecha del sorteo</div>
@@ -97,6 +102,11 @@ export function HeroSection() {
               <div className="text-sm mt-1 font-medium">{soldPercentage.toFixed(0)}% vendido</div>
             </div>
           </div>
+
+          <div className="mt-10">
+            <ShareRaffle title={config.title} />
+          </div>
+
         </div>
       </div>
     </section>

@@ -1,3 +1,4 @@
+import { formatMoney } from '@/lib/format';
 import { useState, useRef } from 'react';
 import { TicketPurchase } from '@/types/raffle';
 import { useRaffleStore } from '@/store/raffleStore';
@@ -152,7 +153,7 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
           <div className="border-t border-border my-2" />
           <div className="flex justify-between text-lg">
             <span className="font-semibold">Total a pagar:</span>
-            <span className="font-display gold-text">${purchase.totalPrice} {config.currency}</span>
+            <span className="font-display gold-text">{formatMoney(purchase.totalPrice, config.currency)} {config.currency}</span>
           </div>
         </div>
         <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">

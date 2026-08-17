@@ -21,7 +21,7 @@ type Result = {
 const statusLabel: Record<string, string> = {
   pending: "Pendiente de verificación",
   verified: "Confirmado",
-  rejected: "Rechazado",
+  cancelled: "Cancelado",
 };
 
 export const TicketLookup = () => {

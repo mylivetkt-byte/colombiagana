@@ -81,6 +81,8 @@ export default function Index() {
             </div>
           </section>
 
+          <TicketLookup />
+
           <SpecificationsSection />
         </>
       ) : (

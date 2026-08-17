@@ -20,7 +20,7 @@ type Result = {
 
 const statusLabel: Record<string, string> = {
   pending: "Pendiente de verificación",
-  confirmed: "Confirmado",
+  verified: "Confirmado",
   rejected: "Rechazado",
 };
 
@@ -88,7 +88,7 @@ export const TicketLookup = () => {
                     {r.quantity} número(s) · {formatMoney(r.total_price)}
                   </p>
                 </div>
-                <Badge variant={r.payment_status === "confirmed" ? "default" : "secondary"}>
+                <Badge variant={r.payment_status === "verified" ? "default" : "secondary"}>
                   {statusLabel[r.payment_status] ?? r.payment_status}
                 </Badge>
               </div>

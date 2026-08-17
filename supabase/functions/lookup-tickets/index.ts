@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
       total_price: p.total_price,
       payment_status: p.payment_status,
       created_at: p.created_at,
-      ticket_numbers: p.payment_status === "confirmed" ? p.ticket_numbers : null,
+      ticket_numbers: p.payment_status === "verified" ? p.ticket_numbers : null,
     }));
 
     return json({ results });

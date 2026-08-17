@@ -5,6 +5,7 @@ import { PricingCards } from '@/components/raffle/PricingCards';
 import { PurchaseForm } from '@/components/raffle/PurchaseForm';
 import { PaymentConfirmation } from '@/components/raffle/PaymentConfirmation';
 import { SpecificationsSection } from '@/components/raffle/SpecificationsSection';
+import { TicketLookup } from '@/components/raffle/TicketLookup';
 import { useRaffleStore } from '@/store/raffleStore';
 import { TicketPurchase } from '@/types/raffle';
 import { Button } from '@/components/ui/button';
@@ -13,11 +14,11 @@ import { Settings } from 'lucide-react';
 export default function Index() {
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [completedPurchase, setCompletedPurchase] = useState<TicketPurchase | null>(null);
-  const { config, loadConfig, loadPurchases } = useRaffleStore();
+  const { config, loadConfig, loadSoldNumbers } = useRaffleStore();
 
   useEffect(() => {
     loadConfig();
-    loadPurchases();
+    loadSoldNumbers();
   }, []);
 
   const handleQuantitySelect = (quantity: number) => {

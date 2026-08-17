@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { DashboardStats } from '@/components/admin/DashboardStats';
 import { PurchasesTable } from '@/components/admin/PurchasesTable';
@@ -5,7 +6,13 @@ import { TicketGrid } from '@/components/raffle/TicketGrid';
 import { useRaffleStore } from '@/store/raffleStore';
 
 export default function Admin() {
-  const { soldNumbers } = useRaffleStore();
+  const { soldNumbers, loadPurchases, loadConfig } = useRaffleStore();
+
+  useEffect(() => {
+    loadConfig();
+    loadPurchases();
+  }, []);
+
 
   return (
     <div className="min-h-screen">

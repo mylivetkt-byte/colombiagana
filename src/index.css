@@ -15,8 +15,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 218 43% 19%;
 
-    --primary: 39 65% 44%;
-    --primary-foreground: 41 60% 97%;
+    --primary: 142 45% 60%;
+    --primary-foreground: 150 60% 98%;
 
     --secondary: 218 30% 92%;
     --secondary-foreground: 218 43% 19%;
@@ -24,7 +24,7 @@
     --muted: 41 32% 92%;
     --muted-foreground: 218 18% 42%;
 
-    --accent: 168 80% 27%;
+    --accent: 142 55% 72%;
     --accent-foreground: 41 60% 97%;
 
     --destructive: 4 68% 44%;
@@ -32,22 +32,25 @@
 
     --border: 41 26% 86%;
     --input: 41 26% 88%;
-    --ring: 39 65% 44%;
+    --ring: 142 45% 60%;
 
     --radius: 0.75rem;
 
-    /* Custom raffle tokens */
-    --gold: 39 65% 44%;
-    --gold-light: 40 62% 60%;
-    --gold-dark: 36 62% 32%;
+    /* Custom raffle tokens (mapped to soft green palette) */
+    --gold: 142 45% 60%;
+    --gold-light: 142 55% 72%;
+    --gold-dark: 142 40% 48%;
     --navy: 218 43% 19%;
     --navy-light: 218 34% 32%;
-    --emerald: 168 80% 27%;
+    --emerald: 142 45% 60%;
     --ticket-bg: 41 40% 94%;
-    --gradient-gold: linear-gradient(135deg, hsl(40, 62%, 58%) 0%, hsl(39, 65%, 44%) 50%, hsl(36, 62%, 32%) 100%);
+
+    --gradient-gold: linear-gradient(135deg, hsl(142, 55%, 72%) 0%, hsl(142, 45%, 60%) 50%, hsl(142, 40%, 48%) 100%);
+    --gradient-green: linear-gradient(135deg, hsl(142 55% 72%) 0%, hsl(142 45% 60%) 50%, hsl(142 40% 48%) 100%);
     --gradient-hero: linear-gradient(180deg, hsl(41, 55%, 97%) 0%, hsl(41, 42%, 94%) 55%, hsl(41, 30%, 90%) 100%);
-    --shadow-gold: 0 0 30px hsl(39 65% 44% / 0.22);
-    --shadow-glow: 0 0 60px hsl(39 65% 44% / 0.14);
+    --shadow-gold: 0 0 30px hsl(142 45% 60% / 0.22);
+    --shadow-green: 0 0 30px hsl(142 45% 60% / 0.22);
+    --shadow-glow: 0 0 60px hsl(142 45% 60% / 0.14);
   }
 
   .dark {
@@ -135,8 +138,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(39 65% 44% / 0.28); }
-  50% { box-shadow: 0 0 40px hsl(39 65% 44% / 0.5); }
+  0%, 100% { box-shadow: 0 0 20px hsl(142 45% 60% / 0.28); }
+  50% { box-shadow: 0 0 40px hsl(142 45% 60% / 0.5); }
 }
 
 @keyframes shimmer {

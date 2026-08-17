@@ -5,7 +5,13 @@ import { TicketGrid } from '@/components/raffle/TicketGrid';
 import { useRaffleStore } from '@/store/raffleStore';
 
 export default function Admin() {
-  const { soldNumbers } = useRaffleStore();
+  const { soldNumbers, loadPurchases, loadConfig } = useRaffleStore();
+
+  useEffect(() => {
+    loadConfig();
+    loadPurchases();
+  }, []);
+
 
   return (
     <div className="min-h-screen">

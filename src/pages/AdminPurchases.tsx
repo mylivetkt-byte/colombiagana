@@ -3,7 +3,12 @@ import { PurchasesTable } from '@/components/admin/PurchasesTable';
 import { useRaffleStore } from '@/store/raffleStore';
 
 export default function AdminPurchases() {
-  const { purchases } = useRaffleStore();
+  const { purchases, loadPurchases } = useRaffleStore();
+
+  useEffect(() => {
+    loadPurchases();
+  }, []);
+
 
   const stats = {
     total: purchases.length,

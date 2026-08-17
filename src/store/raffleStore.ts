@@ -12,6 +12,7 @@ interface RaffleState {
   loadConfig: () => Promise<void>;
   saveConfig: () => Promise<boolean>;
   loadPurchases: () => Promise<void>;
+  loadSoldNumbers: () => Promise<void>;
   addPurchase: (purchase: TicketPurchase) => void;
   updatePurchaseStatus: (id: string, status: TicketPurchase['paymentStatus']) => Promise<void>;
   getAvailableNumbers: () => number[];
@@ -148,6 +149,19 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
     } catch (error) {
       console.error('Error:', error);
       return false;
+    }
+  },
+
+  loadSoldNumbers: async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_sold_numbers');
+      if (error) {
+        console.error('Error loading sold numbers:', error);
+        return;
+      }
+      set({ soldNumbers: (data as number[]) || [] });
+    } catch (error) {
+      console.error('Error:', error);
     }
   },
 

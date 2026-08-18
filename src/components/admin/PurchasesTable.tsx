@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { CheckCircle, XCircle, Clock, Mail, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
   const { config, updatePurchaseStatus } = useRaffleStore();
@@ -135,7 +136,21 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
                     </div>
                   )}
                   {purchase.paymentStatus === 'verified' && (
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await supabase.functions.invoke('send-ticket-email', {
+                            body: { purchaseId: purchase.id }
+                          });
+                          toast.success('Correo reenviado exitosamente');
+                        } catch (error) {
+                          console.error('Error resending ticket email:', error);
+                          toast.error('Error al reenviar el correo');
+                        }
+                      }}
+                    >
                       <Mail className="w-4 h-4 mr-1" />
                       Reenviar
                     </Button>

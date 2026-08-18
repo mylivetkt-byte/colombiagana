@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
     }
 
     const brevoPayload = {
-      sender: { name: "ColombiaGana", email: "noreply@tudominio.com" },
+      sender: { name: "ColombiaGana", email: "mylivetkt@gmail.com" },
       to: [{ email: purchase.buyer_email, name: purchase.buyer_name }],
       subject: `¡Tus números de rifa! ${raffle?.title ?? "Colombia Gana"}`,
       htmlContent: emailHtml,

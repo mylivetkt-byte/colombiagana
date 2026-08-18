@@ -239,11 +239,15 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
 
       if (status === 'verified') {
         try {
-          await supabase.functions.invoke('send-ticket-email', {
+          const { data, error: emailError } = await supabase.functions.invoke('send-ticket-email', {
             body: { purchaseId: id }
           });
+
+          if (emailError || !data?.success) {
+            console.error('Error sending ticket email:', emailError || data);
+          }
         } catch (emailError) {
-          console.error('Error sending ticket email:', emailError);
+          console.error('Error invoking send-ticket-email:', emailError);
         }
       }
     } catch (error) {

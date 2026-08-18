@@ -141,12 +141,20 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
                       variant="outline"
                       onClick={async () => {
                         try {
-                          await supabase.functions.invoke('send-ticket-email', {
+                          const { data, error } = await supabase.functions.invoke('send-ticket-email', {
                             body: { purchaseId: purchase.id }
                           });
+                          
+                          if (error || !data?.success) {
+                            const detail = data?.error || error?.message || 'Error desconocido';
+                            console.error('Error resending ticket email:', detail);
+                            toast.error(`No se pudo reenviar el correo: ${detail}`);
+                            return;
+                          }
+                          
                           toast.success('Correo reenviado exitosamente');
                         } catch (error) {
-                          console.error('Error resending ticket email:', error);
+                          console.error('Error invoking send-ticket-email:', error);
                           toast.error('Error al reenviar el correo');
                         }
                       }}

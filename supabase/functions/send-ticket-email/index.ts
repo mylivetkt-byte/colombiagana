@@ -1,5 +1,3 @@
-import { serve } from "npm:@supabase/supabase-js@2";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -7,13 +5,14 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     const { purchaseId } = await req.json().catch(() => ({}));
+    console.log("send-ticket-email request", { purchaseId });
 
     if (!purchaseId) {
       return new Response(
@@ -22,10 +21,23 @@ serve(async (req) => {
       );
     }
 
-    const supabase = serve(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    console.log("send-ticket-email env check", {
+      hasUrl: !!supabaseUrl,
+      hasServiceRole: !!serviceRoleKey,
+    });
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return new Response(
+        JSON.stringify({ error: "Missing Supabase env vars" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const { createClient } = await import("npm:@supabase/supabase-js@2");
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: purchase, error } = await supabase
       .from("ticket_purchases")
@@ -33,17 +45,23 @@ serve(async (req) => {
       .eq("id", purchaseId)
       .single();
 
+    console.log("send-ticket-email purchase lookup", {
+      found: !!purchase,
+      error: error ? error.message : null,
+      buyerEmail: purchase?.buyer_email || null,
+    });
+
     if (error || !purchase) {
       return new Response(
-        JSON.stringify({ error: "Purchase not found" }),
+        JSON.stringify({ error: "Purchase not found", detail: error?.message }),
         { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
     const raffle = purchase.raffle_config as any;
-    const ticketNumbers = purchase.ticket_numbers
-      .map((n: number) => String(n))
-      .join(", ");
+    const ticketNumbers = Array.isArray(purchase.ticket_numbers)
+      ? purchase.ticket_numbers.map((n: number) => String(n)).join(", ")
+      : "";
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -83,6 +101,10 @@ serve(async (req) => {
     `;
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    console.log("send-ticket-email resend key present", {
+      hasResendKey: !!resendApiKey,
+    });
+
     if (!resendApiKey) {
       return new Response(
         JSON.stringify({ error: "RESEND_API_KEY is not configured" }),
@@ -90,25 +112,36 @@ serve(async (req) => {
       );
     }
 
+    const resendPayload = {
+      from: "ColombiaGana <onboarding@resend.dev>",
+      to: [purchase.buyer_email],
+      subject: `¡Tus números de rifa! ${raffle?.title ?? "Colombia Gana"}`,
+      html: emailHtml,
+    };
+
+    console.log("send-ticket-email sending to Resend", {
+      to: resendPayload.to,
+      subject: resendPayload.subject,
+    });
+
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${resendApiKey}`,
       },
-      body: JSON.stringify({
-        from: "ColombiaGana <onboarding@resend.dev>",
-        to: [purchase.buyer_email],
-        subject: `¡Tus números de rifa! ${raffle?.title ?? "Colombia Gana"}`,
-        html: emailHtml,
-      }),
+      body: JSON.stringify(resendPayload),
+    });
+
+    const responseText = await response.text();
+    console.log("send-ticket-email resend response", {
+      status: response.status,
+      body: responseText,
     });
 
     if (!response.ok) {
-      const text = await response.text();
-      console.error("Resend error:", text);
       return new Response(
-        JSON.stringify({ error: "Failed to send email" }),
+        JSON.stringify({ error: "Failed to send email", detail: responseText }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -119,8 +152,9 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("send-ticket-email error", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

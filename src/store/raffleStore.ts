@@ -15,6 +15,7 @@ interface RaffleState {
   loadSoldNumbers: () => Promise<void>;
   addPurchase: (purchase: TicketPurchase) => void;
   updatePurchaseStatus: (id: string, status: TicketPurchase['paymentStatus']) => Promise<void>;
+  resetRaffle: () => Promise<void>;
   getAvailableNumbers: () => number[];
   generateRandomNumbers: (quantity: number) => number[];
 }
@@ -235,6 +236,30 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
 
         return { purchases: updatedPurchases, soldNumbers };
       });
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  },
+
+  resetRaffle: async () => {
+    try {
+      const { configId } = get();
+      
+      if (!configId) {
+        return;
+      }
+
+      const { error } = await supabase
+        .from('ticket_purchases')
+        .delete()
+        .eq('raffle_id', configId);
+
+      if (error) {
+        console.error('Error resetting raffle:', error);
+        return;
+      }
+
+      set({ purchases: [], soldNumbers: [] });
     } catch (error) {
       console.error('Error:', error);
     }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRaffleStore } from '@/store/raffleStore';
+import { TicketPurchase } from '@/types/raffle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -19,8 +20,8 @@ import {
 import { CheckCircle, XCircle, Clock, Mail, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function PurchasesTable() {
-  const { purchases, updatePurchaseStatus } = useRaffleStore();
+export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
+  const { updatePurchaseStatus } = useRaffleStore();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleVerify = (id: string) => {

@@ -1,15 +1,17 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { PurchasesTable } from '@/components/admin/PurchasesTable';
 import { useRaffleStore } from '@/store/raffleStore';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 export default function AdminPurchases() {
   const { purchases, loadPurchases } = useRaffleStore();
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     loadPurchases();
   }, []);
-
 
   const stats = {
     total: purchases.length,
@@ -17,6 +19,12 @@ export default function AdminPurchases() {
     verified: purchases.filter(p => p.paymentStatus === 'verified').length,
     cancelled: purchases.filter(p => p.paymentStatus === 'cancelled').length
   };
+
+  const filtered = purchases.filter(p =>
+    p.buyerName.toLowerCase().includes(query.toLowerCase()) ||
+    p.buyerEmail.toLowerCase().includes(query.toLowerCase()) ||
+    p.buyerPhone.toLowerCase().includes(query.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen">
@@ -47,7 +55,22 @@ export default function AdminPurchases() {
           </div>
         </div>
 
-        <PurchasesTable />
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nombre, correo o teléfono"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+
+        <PurchasesTable purchases={filtered} />
       </main>
     </div>
   );

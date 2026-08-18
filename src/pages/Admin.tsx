@@ -6,7 +6,7 @@ import { TicketGrid } from '@/components/raffle/TicketGrid';
 import { useRaffleStore } from '@/store/raffleStore';
 
 export default function Admin() {
-  const { soldNumbers, loadPurchases, loadConfig } = useRaffleStore();
+  const { soldNumbers, purchases, loadPurchases, loadConfig } = useRaffleStore();
 
   useEffect(() => {
     loadConfig();
@@ -29,7 +29,7 @@ export default function Admin() {
         <div className="grid lg:grid-cols-2 gap-8">
           <div>
             <h2 className="text-xl font-bold mb-4">Últimas Compras</h2>
-            <PurchasesTable />
+            <PurchasesTable purchases={purchases} />
           </div>
           
           <div>

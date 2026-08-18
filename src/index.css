@@ -156,12 +156,12 @@
   }
 
   .ticket-number-available {
-    @apply bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 hover:from-gold-300 hover:to-gold-400 hover:text-gold-900 hover:scale-115;
+    @apply bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 hover:from-gold-300 hover:to-gold-400 hover:text-gold-900 hover:scale-110;
   }
 
   .ticket-number-selected {
     background: var(--gradient-gold);
-    @apply text-white scale-115 font-bold;
+    @apply text-white scale-110 font-bold;
     box-shadow: var(--shadow-glow);
   }
 

@@ -21,8 +21,9 @@ import { CheckCircle, XCircle, Clock, Mail, Image as ImageIcon } from 'lucide-re
 import { toast } from 'sonner';
 
 export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
-  const { updatePurchaseStatus } = useRaffleStore();
+  const { config, updatePurchaseStatus } = useRaffleStore();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const digitCount = String(config.endNumber).length;
 
   const handleVerify = (id: string) => {
     updatePurchaseStatus(id, 'verified');
@@ -87,7 +88,7 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
                   <div className="flex gap-1 flex-wrap">
                     {purchase.ticketNumbers.map(num => (
                       <span key={num} className="font-display text-primary bg-primary/10 px-2 py-0.5 rounded">
-                        {num.toString().padStart(2, '0')}
+                        {num.toString().padStart(digitCount, '0')}
                       </span>
                     ))}
                   </div>

@@ -15,7 +15,8 @@ export function TicketGrid({
   interactive = true 
 }: TicketGridProps) {
   const { config, soldNumbers } = useRaffleStore();
-  
+  const digitCount = String(config.endNumber).length;
+
   const allNumbers = Array.from(
     { length: config.endNumber - config.startNumber + 1 }, 
     (_, i) => config.startNumber + i
@@ -64,7 +65,7 @@ export function TicketGrid({
                 !isSold && !isSelected && "ticket-number-available"
               )}
             >
-              {num.toString().padStart(2, '0')}
+              {num.toString().padStart(digitCount, '0')}
             </button>
           );
         })}

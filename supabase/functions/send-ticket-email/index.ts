@@ -97,7 +97,7 @@ serve(async (req) => {
         Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "ColombiaGana <noreply@tudominio.com>",
+        from: "ColombiaGana <onboarding@resend.dev>",
         to: [purchase.buyer_email],
         subject: `¡Tus números de rifa! ${raffle?.title ?? "Colombia Gana"}`,
         html: emailHtml,

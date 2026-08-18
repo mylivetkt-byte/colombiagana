@@ -25,12 +25,12 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const brevoApiKey = Deno.env.get("BREVO_API_KEY");
 
     console.log("send-ticket-email env check", {
       hasUrl: !!supabaseUrl,
       hasServiceRole: !!serviceRoleKey,
-      hasResendKey: !!resendApiKey,
+      hasBrevoKey: !!brevoApiKey,
     });
 
     if (!supabaseUrl || !serviceRoleKey) {
@@ -103,36 +103,36 @@ Deno.serve(async (req) => {
       </html>
     `;
 
-    if (!resendApiKey) {
+    if (!brevoApiKey) {
       return new Response(
-        JSON.stringify({ error: "RESEND_API_KEY is not configured" }),
+        JSON.stringify({ error: "BREVO_API_KEY is not configured" }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const resendPayload = {
-      from: "ColombiaGana <onboarding@resend.dev>",
-      to: [purchase.buyer_email],
+    const brevoPayload = {
+      sender: { name: "ColombiaGana", email: "noreply@tudominio.com" },
+      to: [{ email: purchase.buyer_email, name: purchase.buyer_name }],
       subject: `¡Tus números de rifa! ${raffle?.title ?? "Colombia Gana"}`,
-      html: emailHtml,
+      htmlContent: emailHtml,
     };
 
-    console.log("send-ticket-email sending to Resend", {
-      to: resendPayload.to,
-      subject: resendPayload.subject,
+    console.log("send-ticket-email sending to Brevo", {
+      to: brevoPayload.to.map((x: any) => x.email),
+      subject: brevoPayload.subject,
     });
 
-    const response = await fetch("https://api.resend.com/emails", {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${resendApiKey}`,
+        "api-key": brevoApiKey,
       },
-      body: JSON.stringify(resendPayload),
+      body: JSON.stringify(brevoPayload),
     });
 
     const responseText = await response.text();
-    console.log("send-ticket-email resend response", {
+    console.log("send-ticket-email brevo response", {
       status: response.status,
       body: responseText,
     });

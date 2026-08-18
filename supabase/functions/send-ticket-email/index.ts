@@ -1,3 +1,5 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -23,10 +25,12 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
     console.log("send-ticket-email env check", {
       hasUrl: !!supabaseUrl,
       hasServiceRole: !!serviceRoleKey,
+      hasResendKey: !!resendApiKey,
     });
 
     if (!supabaseUrl || !serviceRoleKey) {
@@ -36,7 +40,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { createClient } = await import("npm:@supabase/supabase-js@2");
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: purchase, error } = await supabase
@@ -99,11 +102,6 @@ Deno.serve(async (req) => {
         </body>
       </html>
     `;
-
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    console.log("send-ticket-email resend key present", {
-      hasResendKey: !!resendApiKey,
-    });
 
     if (!resendApiKey) {
       return new Response(

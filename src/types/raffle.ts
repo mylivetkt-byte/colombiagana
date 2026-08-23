@@ -63,7 +63,7 @@ export interface PricingTier {
 export interface SpecialPrize {
   id: string;
   raffleId?: string;
-  ticketNumber: number;
+  ticketNumber: number | null;
   prizeType: 'article' | 'money';
   prizeDescription: string;
   prizeAmount?: number;

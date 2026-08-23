@@ -24,77 +24,58 @@ export function SpecialPrizesForm() {
     loadSpecialPrizes();
   }, [configId]);
 
-  /**
-   * Auto-asignación por hueco más ancho (widest-gap algorithm).
-   *
-   * Ordena los números ya asignados y encuentra el espacio libre más grande
-   * entre ellos (incluyendo los extremos del rango). Coloca el nuevo número
-   * en el centro de ese hueco con un pequeño jitter (~15%), garantizando
-   * que quede tan alejado como sea posible de cualquier otro premio.
-   *
-   * Ejemplo con rango 1000-9999 y premios en [3500, 7000]:
-   *   Huecos: [1000-3499]=2499, [3501-6999]=3498, [7001-9999]=2998
-   *   → Hueco más ancho: 3501-6999 → candidato ~5250 ± jitter
-   */
-  const autoAssignNumber = () => {
+  const calculateAutoAssignedNumber = (): number => {
     const start = config.startNumber;
     const end = config.endNumber;
-    const rangeSize = end - start + 1;
-
-    // Premios ya existentes ordenados ascendentemente
     const existing = [...specialPrizes.map(p => p.ticketNumber)].sort((a, b) => a - b);
+    const totalSegments = existing.length + 1;
+    const rangeSize = end - start + 1;
+    const segmentSize = Math.floor(rangeSize / totalSegments);
 
-    if (existing.length === 0) {
-      // Sin premios previos: colocar cerca del centro con variación aleatoria
-      const center = Math.floor((start + end) / 2);
-      const jitter = Math.floor((Math.random() - 0.5) * rangeSize * 0.3);
-      const picked = Math.max(start, Math.min(end, center + jitter));
-      setForm(p => ({ ...p, ticketNumber: String(picked) }));
-      toast.success(`Número sugerido: ${picked}`);
-      return;
-    }
+    const usedSegments = new Set<number>();
+    existing.forEach(num => {
+      if (num === null) return;
+      const segIndex = Math.min(Math.floor((num - start) / segmentSize), totalSegments - 1);
+      usedSegments.add(segIndex);
+    });
 
-    // Construir fronteras virtuales fuera del rango para calcular huecos extremos
-    const boundaries = [start - 1, ...existing, end + 1];
-
-    let widestGapSize = -1;
-    let widestGapStart = start;
-    let widestGapEnd = end;
-
-    for (let i = 0; i < boundaries.length - 1; i++) {
-      const gapStart = boundaries[i] + 1;
-      const gapEnd = boundaries[i + 1] - 1;
-      const gapSize = gapEnd - gapStart + 1;
-
-      if (gapSize > widestGapSize) {
-        widestGapSize = gapSize;
-        widestGapStart = gapStart;
-        widestGapEnd = gapEnd;
+    let targetSegment = 0;
+    for (let i = 0; i < totalSegments; i++) {
+      if (!usedSegments.has(i)) {
+        targetSegment = i;
+        break;
       }
     }
 
-    // Colocar en el centro del hueco más ancho con pequeño jitter (±15% del hueco)
-    const center = Math.floor((widestGapStart + widestGapEnd) / 2);
-    const maxJitter = Math.floor(widestGapSize * 0.15);
+    const segStart = start + targetSegment * segmentSize;
+    const segEnd = targetSegment === totalSegments - 1 ? end : start + (targetSegment + 1) * segmentSize - 1;
+    const center = Math.floor((segStart + segEnd) / 2);
+    const maxJitter = Math.floor(segmentSize * 0.2);
     const jitter = Math.floor((Math.random() - 0.5) * 2 * maxJitter);
-    const picked = Math.max(widestGapStart, Math.min(widestGapEnd, center + jitter));
+    return Math.max(segStart, Math.min(segEnd, center + jitter));
+  };
 
+  const autoAssignNumber = () => {
+    const picked = calculateAutoAssignedNumber();
     setForm(p => ({ ...p, ticketNumber: String(picked) }));
-    toast.success(`Número sugerido: ${picked} — zona más libre del rango (hueco de ${widestGapSize} números)`);
+    toast.success(`Número sugerido: ${picked} — segmento distribuido uniformemente`);
   };
 
   const handleAdd = async () => {
-    if (!form.ticketNumber || !form.prizeDescription) {
-      toast.error('Completa el número de boleta y la descripción del premio');
+    if (!form.prizeDescription) {
+      toast.error('Completa la descripción del premio');
       return;
     }
-    const num = parseInt(form.ticketNumber);
-    if (isNaN(num) || num < config.startNumber || num > config.endNumber) {
+    const ticketNumber = form.ticketNumber
+      ? parseInt(form.ticketNumber)
+      : calculateAutoAssignedNumber();
+    
+    if (isNaN(ticketNumber) || ticketNumber < config.startNumber || ticketNumber > config.endNumber) {
       toast.error(`El número debe estar entre ${config.startNumber} y ${config.endNumber}`);
       return;
     }
     const ok = await addSpecialPrize({
-      ticketNumber: num,
+      ticketNumber,
       prizeType: form.prizeType,
       prizeDescription: form.prizeDescription,
       prizeAmount: form.prizeType === 'money' && form.prizeAmount ? parseFloat(form.prizeAmount) : undefined,
@@ -261,7 +242,7 @@ export function SpecialPrizesForm() {
                 </Button>
               </div>
               <p className="text-[10px] text-muted-foreground">
-                Usa <Shuffle className="w-3 h-3 inline" /> para asignar un número automáticamente distribuido en el rango, evitando que los premios queden muy juntos.
+                Déjalo vacío para asignar automáticamente un número distribuido uniformemente en el rango, evitando que los premios queden muy juntos.
               </p>
             </div>
             <div className="space-y-2">

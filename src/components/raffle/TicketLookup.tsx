@@ -39,13 +39,19 @@ export const TicketLookup = () => {
 
   const totalNumbers = config.endNumber - config.startNumber + 1;
   const soldPercentage = totalNumbers > 0 ? (soldNumbers.length / totalNumbers) * 100 : 0;
-  // Los premios solo se revelan al cliente cuando la rifa supera el 30%
-  const prizesUnlocked = soldPercentage >= 30;
 
-  // Mapa rápido: número -> premio (solo premios activos)
+  // Mapa rápido: número -> premio (todos los premios con número asignado)
   const prizeMap = new Map(
-    specialPrizes.filter(p => p.isActive).map(p => [String(p.ticketNumber), p])
+    specialPrizes.filter(p => p.ticketNumber !== null).map(p => [String(p.ticketNumber), p])
   );
+
+  // Cada premio se revela cuando se vende el % correspondiente a su posición en el rango.
+  // Ejemplo: rango 1000-9999, premio en 3250 → se revela al ~25%.
+  // Mínimo 30% para cualquier premio.
+  const getPrizeUnlockThreshold = (ticketNumber: number) => {
+    const position = (ticketNumber - config.startNumber) / totalNumbers;
+    return Math.max(30, position * 100);
+  };
 
   const search = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,8 +105,12 @@ export const TicketLookup = () => {
         <div className="space-y-6 mt-8">
           {results?.map((r) => {
             // Buscar números premiados entre los boletos de esta compra
-            const winnerTickets = prizesUnlocked && r.ticket_numbers
-              ? r.ticket_numbers.filter(n => prizeMap.has(n))
+            const winnerTickets = r.ticket_numbers
+              ? r.ticket_numbers.filter(n => {
+                  const prize = prizeMap.get(n);
+                  if (!prize) return false;
+                  return soldPercentage >= getPrizeUnlockThreshold(prize.ticketNumber);
+                })
               : [];
 
             return (
@@ -122,8 +132,11 @@ export const TicketLookup = () => {
                 {r.ticket_numbers ? (
                   <div className="flex flex-wrap gap-2">
                     {r.ticket_numbers.map((n) => {
-                      const prize = prizesUnlocked ? prizeMap.get(n) : undefined;
-                      if (prize) return null; // Los ganadores se renderizan abajo
+                      const prize = prizeMap.get(n);
+                      const isUnlocked = prize
+                        ? soldPercentage >= getPrizeUnlockThreshold(prize.ticketNumber)
+                        : false;
+                      if (prize && isUnlocked) return null; // Los ganadores se renderizan abajo
                       return (
                         <span
                           key={n}

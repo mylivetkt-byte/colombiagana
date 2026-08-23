@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { formatMoney } from '@/lib/format';
 
 interface PricingCardsProps {
-  selectedQuantity: number;
+  selectedQuantity: number | null;
   onSelect: (quantity: number) => void;
 }
 

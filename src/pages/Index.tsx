@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 
 export default function Index() {
-  const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [selectedQuantity, setSelectedQuantity] = useState<number | null>(null);
   const [completedPurchase, setCompletedPurchase] = useState<TicketPurchase | null>(null);
   const { config, loadConfig, loadSoldNumbers } = useRaffleStore();
 
@@ -23,6 +23,9 @@ export default function Index() {
 
   const handleQuantitySelect = (quantity: number) => {
     setSelectedQuantity(quantity);
+    setTimeout(() => {
+      document.getElementById('purchase-section')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handlePurchaseComplete = (purchase: TicketPurchase) => {
@@ -31,7 +34,7 @@ export default function Index() {
 
   const handleNewPurchase = () => {
     setCompletedPurchase(null);
-    setSelectedQuantity(1);
+    setSelectedQuantity(null);
   };
 
   if (completedPurchase) {
@@ -71,15 +74,17 @@ export default function Index() {
             <PricingCards selectedQuantity={selectedQuantity} onSelect={handleQuantitySelect} />
           </section>
 
-          {/* Purchase Section */}
-          <section className="py-16 container">
-            <div className="max-w-lg mx-auto">
-              <PurchaseForm
-                selectedQuantity={selectedQuantity}
-                onPurchaseComplete={handlePurchaseComplete}
-              />
-            </div>
-          </section>
+          {/* Purchase Section - Solo se muestra si se ha seleccionado un plan */}
+          {selectedQuantity !== null && (
+            <section id="purchase-section" className="py-16 container transition-all animate-fade-in">
+              <div className="max-w-lg mx-auto">
+                <PurchaseForm
+                  selectedQuantity={selectedQuantity}
+                  onPurchaseComplete={handlePurchaseComplete}
+                />
+              </div>
+            </section>
+          )}
 
           <TicketLookup />
 

@@ -17,9 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CheckCircle, XCircle, Clock, Mail, Image as ImageIcon } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Mail, Copy, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
   const { config, updatePurchaseStatus } = useRaffleStore();
@@ -28,7 +27,7 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
 
   const handleVerify = (id: string) => {
     updatePurchaseStatus(id, 'verified');
-    toast.success('Pago verificado. Se enviará la boleta por correo.');
+    toast.success('Pago verificado. Abrí el correo para enviar la boleta.');
   };
 
   const handleCancel = (id: string) => {
@@ -47,6 +46,38 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
     }
   };
 
+  const getEmailStatus = (purchase: TicketPurchase) => {
+    if (purchase.paymentStatus !== 'verified') return null;
+    if (purchase.emailSentAt) {
+      return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Enviado</Badge>;
+    }
+    if (purchase.emailError) {
+      return <Badge variant="destructive" title={purchase.emailError}>Error</Badge>;
+    }
+    return <Badge variant="secondary">Pendiente</Badge>;
+  };
+
+  const openMailto = (purchase: TicketPurchase) => {
+    const raffleTitle = config.title || 'Colombia Gana';
+    const ticketNumbers = purchase.ticketNumbers.map(n => String(n).padStart(digitCount, '0')).join(', ');
+    const subject = encodeURIComponent(`¡Tus números de rifa! ${raffleTitle}`);
+    const body = encodeURIComponent(
+      `Hola ${purchase.buyerName},\n\n` +
+      `Tus números para la rifa ${raffleTitle} son:\n` +
+      `${ticketNumbers}\n\n` +
+      `Cantidad: ${purchase.quantity}\n` +
+      `Total pagado: ${purchase.totalPrice}\n\n` +
+      `Guarda este correo como comprobante. ¡Mucha suerte!`
+    );
+    window.open(`mailto:${purchase.buyerEmail}?subject=${subject}&body=${body}`, '_blank');
+  };
+
+  const copyTickets = async (purchase: TicketPurchase) => {
+    const ticketNumbers = purchase.ticketNumbers.map(n => String(n).padStart(digitCount, '0')).join(', ');
+    await navigator.clipboard.writeText(ticketNumbers);
+    toast.success('Números copiados al portapapeles');
+  };
+
   if (purchases.length === 0) {
     return (
       <div className="glass-card p-12 text-center">
@@ -58,17 +89,6 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
       </div>
     );
   }
-
-  const getEmailStatus = (purchase: TicketPurchase) => {
-    if (purchase.paymentStatus !== 'verified') return null;
-    if (purchase.emailSentAt) {
-      return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Enviado</Badge>;
-    }
-    if (purchase.emailError) {
-      return <Badge variant="destructive" title={purchase.emailError}>Error</Badge>;
-    }
-    return <Badge variant="secondary">Pendiente</Badge>;
-  };
 
   return (
     <>
@@ -149,41 +169,24 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
                     </div>
                   )}
                   {purchase.paymentStatus === 'verified' && (
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={async () => {
-                        try {
-                          const { data, error } = await supabase.functions.invoke('send-ticket-email', {
-                            body: { purchaseId: purchase.id }
-                          });
-                          
-                          if (error || !data?.success) {
-                            const detail = data?.error || error?.message || 'Error desconocido';
-                            console.error('Error resending ticket email:', detail);
-                            if (detail.includes('CORS') || detail.includes('Failed to send a request')) {
-                              toast.error('Error de conexión con el servidor de correo. Contactá al administrador.');
-                            } else {
-                              toast.error(`No se pudo reenviar el correo: ${detail}`);
-                            }
-                            return;
-                          }
-                          
-                          toast.success('Correo reenviado exitosamente');
-                        } catch (error: any) {
-                          console.error('Error invoking send-ticket-email:', error);
-                          const msg = error?.message || '';
-                          if (msg.includes('CORS') || msg.includes('Failed to send a request')) {
-                            toast.error('Error de conexión con el servidor de correo (CORS). Verificá la configuración en Supabase.');
-                          } else {
-                            toast.error('Error al reenviar el correo');
-                          }
-                        }
-                      }}
-                    >
-                      <Mail className="w-4 h-4 mr-1" />
-                      Reenviar
-                    </Button>
+                    <div className="flex gap-2 justify-end">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => openMailto(purchase)}
+                      >
+                        <Mail className="w-4 h-4 mr-1" />
+                        Enviar correo
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => copyTickets(purchase)}
+                      >
+                        <Copy className="w-4 h-4 mr-1" />
+                        Copiar números
+                      </Button>
+                    </div>
                   )}
                 </TableCell>
               </TableRow>

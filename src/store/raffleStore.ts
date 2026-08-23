@@ -112,7 +112,10 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
             isActive: data.is_active,
             specifications: data.specifications || [],
             paymentMethods: (data as any).payment_methods || [],
-            plans: plans
+            plans: plans,
+            brevoApiKey: data.brevo_api_key || undefined,
+            brevoSenderEmail: data.brevo_sender_email || undefined,
+            brevoSenderName: data.brevo_sender_name || undefined
           }
         });
       }
@@ -145,7 +148,10 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
         is_active: config.isActive,
         specifications: config.specifications,
         payment_methods: JSON.parse(JSON.stringify(config.paymentMethods)),
-        pricing_plans: JSON.parse(JSON.stringify(plansToSave))
+        pricing_plans: JSON.parse(JSON.stringify(plansToSave)),
+        brevo_api_key: config.brevoApiKey || null,
+        brevo_sender_email: config.brevoSenderEmail || null,
+        brevo_sender_name: config.brevoSenderName || null
       };
 
       if (configId) {

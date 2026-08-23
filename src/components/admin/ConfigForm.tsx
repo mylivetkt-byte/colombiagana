@@ -508,6 +508,53 @@ export function ConfigForm() {
         />
       </div>
 
+      {/* Configuración de Correo Brevo */}
+      <div className="glass-card p-6">
+        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center">
+            <Mail className="w-4 h-4 text-primary-foreground" />
+          </div>
+          Configuración de Correo (Brevo)
+        </h2>
+        
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label>API Key de Brevo</Label>
+            <Input
+              type="password"
+              value={localConfig.brevoApiKey || ''}
+              onChange={(e) => setLocalConfig(prev => ({ ...prev, brevoApiKey: e.target.value }))}
+              className="bg-input"
+              placeholder="xkeysib-..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Obtenela en Brevo → Settings → API Keys
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Email Remitente</Label>
+            <Input
+              type="email"
+              value={localConfig.brevoSenderEmail || ''}
+              onChange={(e) => setLocalConfig(prev => ({ ...prev, brevoSenderEmail: e.target.value }))}
+              className="bg-input"
+              placeholder="mylivetkt@gmail.com"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Nombre Remitente</Label>
+            <Input
+              value={localConfig.brevoSenderName || ''}
+              onChange={(e) => setLocalConfig(prev => ({ ...prev, brevoSenderName: e.target.value }))}
+              className="bg-input"
+              placeholder="ColombiaGana"
+            />
+          </div>
+        </div>
+      </div>
+
       <Button 
         onClick={handleSave} 
         disabled={isSaving}

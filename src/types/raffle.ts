@@ -36,6 +36,9 @@ export interface RaffleConfig {
   specifications: string[];
   paymentMethods: PaymentMethod[];
   plans?: PricingPlan[];
+  brevoApiKey?: string;
+  brevoSenderEmail?: string;
+  brevoSenderName?: string;
 }
 
 export interface TicketPurchase {

@@ -25,43 +25,62 @@ export function SpecialPrizesForm() {
   }, [configId]);
 
   /**
-   * Calcula un número de boleta distribuido uniformemente en el rango,
-   * evitando cercanía con premios ya existentes.
-   * La distribución respeta el progreso de la rifa: los números se
-   * reparten en segmentos proporcionales al rango total.
+   * Auto-asignación por hueco más ancho (widest-gap algorithm).
+   *
+   * Ordena los números ya asignados y encuentra el espacio libre más grande
+   * entre ellos (incluyendo los extremos del rango). Coloca el nuevo número
+   * en el centro de ese hueco con un pequeño jitter (~15%), garantizando
+   * que quede tan alejado como sea posible de cualquier otro premio.
+   *
+   * Ejemplo con rango 1000-9999 y premios en [3500, 7000]:
+   *   Huecos: [1000-3499]=2499, [3501-6999]=3498, [7001-9999]=2998
+   *   → Hueco más ancho: 3501-6999 → candidato ~5250 ± jitter
    */
   const autoAssignNumber = () => {
-    const rangeSize = config.endNumber - config.startNumber + 1;
-    const existingNums = specialPrizes.map(p => p.ticketNumber);
-    const totalPrizes = existingNums.length + 1; // incluye el que vamos a asignar
+    const start = config.startNumber;
+    const end = config.endNumber;
+    const rangeSize = end - start + 1;
 
-    // Dividir el rango en (totalPrizes) segmentos y tomar del segmento menos ocupado
-    const segmentSize = Math.floor(rangeSize / totalPrizes);
+    // Premios ya existentes ordenados ascendentemente
+    const existing = [...specialPrizes.map(p => p.ticketNumber)].sort((a, b) => a - b);
 
-    // Encontrar el segmento con mayor distancia mínima a los números ya asignados
-    let bestCandidate = config.startNumber;
-    let bestMinDist = -1;
+    if (existing.length === 0) {
+      // Sin premios previos: colocar cerca del centro con variación aleatoria
+      const center = Math.floor((start + end) / 2);
+      const jitter = Math.floor((Math.random() - 0.5) * rangeSize * 0.3);
+      const picked = Math.max(start, Math.min(end, center + jitter));
+      setForm(p => ({ ...p, ticketNumber: String(picked) }));
+      toast.success(`Número sugerido: ${picked}`);
+      return;
+    }
 
-    for (let seg = 0; seg < totalPrizes; seg++) {
-      const segStart = config.startNumber + seg * segmentSize;
-      const segEnd = Math.min(segStart + segmentSize - 1, config.endNumber);
-      // Punto central del segmento con variación aleatoria (±20% del segmento)
-      const jitter = Math.floor((Math.random() - 0.5) * segmentSize * 0.4);
-      const candidate = Math.max(segStart, Math.min(segEnd, Math.floor((segStart + segEnd) / 2) + jitter));
+    // Construir fronteras virtuales fuera del rango para calcular huecos extremos
+    const boundaries = [start - 1, ...existing, end + 1];
 
-      // Distancia mínima a cualquier número ya asignado
-      const minDist = existingNums.length === 0
-        ? rangeSize
-        : Math.min(...existingNums.map(n => Math.abs(n - candidate)));
+    let widestGapSize = -1;
+    let widestGapStart = start;
+    let widestGapEnd = end;
 
-      if (minDist > bestMinDist) {
-        bestMinDist = minDist;
-        bestCandidate = candidate;
+    for (let i = 0; i < boundaries.length - 1; i++) {
+      const gapStart = boundaries[i] + 1;
+      const gapEnd = boundaries[i + 1] - 1;
+      const gapSize = gapEnd - gapStart + 1;
+
+      if (gapSize > widestGapSize) {
+        widestGapSize = gapSize;
+        widestGapStart = gapStart;
+        widestGapEnd = gapEnd;
       }
     }
 
-    setForm(p => ({ ...p, ticketNumber: String(bestCandidate) }));
-    toast.success(`Número sugerido: ${bestCandidate} (distribuido en el rango)`);
+    // Colocar en el centro del hueco más ancho con pequeño jitter (±15% del hueco)
+    const center = Math.floor((widestGapStart + widestGapEnd) / 2);
+    const maxJitter = Math.floor(widestGapSize * 0.15);
+    const jitter = Math.floor((Math.random() - 0.5) * 2 * maxJitter);
+    const picked = Math.max(widestGapStart, Math.min(widestGapEnd, center + jitter));
+
+    setForm(p => ({ ...p, ticketNumber: String(picked) }));
+    toast.success(`Número sugerido: ${picked} — zona más libre del rango (hueco de ${widestGapSize} números)`);
   };
 
   const handleAdd = async () => {

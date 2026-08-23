@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Plus, Trash2, Gift, DollarSign, Trophy, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, Gift, DollarSign, Trophy, Eye, EyeOff, Shuffle } from 'lucide-react';
 
 export function SpecialPrizesForm() {
   const { specialPrizes, loadSpecialPrizes, addSpecialPrize, updateSpecialPrize, deleteSpecialPrize, config, configId } = useRaffleStore();
@@ -23,6 +23,46 @@ export function SpecialPrizesForm() {
   useEffect(() => {
     loadSpecialPrizes();
   }, [configId]);
+
+  /**
+   * Calcula un número de boleta distribuido uniformemente en el rango,
+   * evitando cercanía con premios ya existentes.
+   * La distribución respeta el progreso de la rifa: los números se
+   * reparten en segmentos proporcionales al rango total.
+   */
+  const autoAssignNumber = () => {
+    const rangeSize = config.endNumber - config.startNumber + 1;
+    const existingNums = specialPrizes.map(p => p.ticketNumber);
+    const totalPrizes = existingNums.length + 1; // incluye el que vamos a asignar
+
+    // Dividir el rango en (totalPrizes) segmentos y tomar del segmento menos ocupado
+    const segmentSize = Math.floor(rangeSize / totalPrizes);
+
+    // Encontrar el segmento con mayor distancia mínima a los números ya asignados
+    let bestCandidate = config.startNumber;
+    let bestMinDist = -1;
+
+    for (let seg = 0; seg < totalPrizes; seg++) {
+      const segStart = config.startNumber + seg * segmentSize;
+      const segEnd = Math.min(segStart + segmentSize - 1, config.endNumber);
+      // Punto central del segmento con variación aleatoria (±20% del segmento)
+      const jitter = Math.floor((Math.random() - 0.5) * segmentSize * 0.4);
+      const candidate = Math.max(segStart, Math.min(segEnd, Math.floor((segStart + segEnd) / 2) + jitter));
+
+      // Distancia mínima a cualquier número ya asignado
+      const minDist = existingNums.length === 0
+        ? rangeSize
+        : Math.min(...existingNums.map(n => Math.abs(n - candidate)));
+
+      if (minDist > bestMinDist) {
+        bestMinDist = minDist;
+        bestCandidate = candidate;
+      }
+    }
+
+    setForm(p => ({ ...p, ticketNumber: String(bestCandidate) }));
+    toast.success(`Número sugerido: ${bestCandidate} (distribuido en el rango)`);
+  };
 
   const handleAdd = async () => {
     if (!form.ticketNumber || !form.prizeDescription) {
@@ -180,15 +220,30 @@ export function SpecialPrizesForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Número de Boleta</Label>
-              <Input
-                type="number"
-                placeholder={`${config.startNumber} – ${config.endNumber}`}
-                value={form.ticketNumber}
-                onChange={e => setForm(p => ({ ...p, ticketNumber: e.target.value }))}
-                className="bg-input"
-                min={config.startNumber}
-                max={config.endNumber}
-              />
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  placeholder={`${config.startNumber} – ${config.endNumber}`}
+                  value={form.ticketNumber}
+                  onChange={e => setForm(p => ({ ...p, ticketNumber: e.target.value }))}
+                  className="bg-input flex-1"
+                  min={config.startNumber}
+                  max={config.endNumber}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  title="Auto-asignar número distribuido uniformemente"
+                  onClick={autoAssignNumber}
+                  className="shrink-0 border-accent/30 text-accent hover:text-accent"
+                >
+                  <Shuffle className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Usa <Shuffle className="w-3 h-3 inline" /> para asignar un número automáticamente distribuido en el rango, evitando que los premios queden muy juntos.
+              </p>
             </div>
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Tipo de Premio</Label>

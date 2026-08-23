@@ -1,15 +1,24 @@
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useRaffleStore } from '@/store/raffleStore';
 import { Calendar, Trophy, Ticket } from 'lucide-react';
 import { Countdown } from './Countdown';
 import { ShareRaffle } from './ShareRaffle';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export function HeroSection() {
-  const { config, soldNumbers } = useRaffleStore();
+  const { config, soldNumbers, specialPrizes, loadSpecialPrizes } = useRaffleStore();
   const totalNumbers = config.endNumber - config.startNumber + 1;
   const availableCount = totalNumbers - soldNumbers.length;
   const soldPercentage = (soldNumbers.length / totalNumbers) * 100;
   const shouldShowDrawDate = (config.showDrawDate ?? true) && Boolean(config.drawDate);
+
+  useEffect(() => {
+    loadSpecialPrizes();
+  }, []);
+
+  const hasActivePrizes = specialPrizes.some(p => p.isActive);
 
   return (
     <section className="relative py-20 overflow-hidden">
@@ -105,6 +114,17 @@ export function HeroSection() {
               <div className="text-sm mt-1 font-medium">{soldPercentage.toFixed(0)}% vendido</div>
             </div>
           </div>
+
+          {hasActivePrizes && (
+            <div className="mt-8 animate-fade-in">
+              <Link to="/ganadores">
+                <Button className="gold-gradient text-primary-foreground gap-2 px-8 py-6 text-lg font-bold rounded-2xl shadow-lg hover:opacity-90 transform hover:-translate-y-0.5 transition-all">
+                  <Trophy className="w-5 h-5 animate-pulse" />
+                  Ver Números Ganadores y Premios Especiales
+                </Button>
+              </Link>
+            </div>
+          )}
 
           <div className="mt-10">
             <ShareRaffle title={config.title} />

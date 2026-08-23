@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 import Index from "./pages/Index";
+import Winners from "./pages/Winners";
 import Admin from "./pages/Admin";
 import AdminConfig from "./pages/AdminConfig";
 import AdminPurchases from "./pages/AdminPurchases";
@@ -23,6 +24,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/ganadores" element={<Winners />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/admin/config" element={<ProtectedRoute><AdminConfig /></ProtectedRoute>} />

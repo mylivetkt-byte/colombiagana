@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { ConfigForm } from '@/components/admin/ConfigForm';
+import { SpecialPrizesForm } from '@/components/admin/SpecialPrizesForm';
 import { useRaffleStore } from '@/store/raffleStore';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,6 +47,14 @@ export default function AdminConfig() {
 
         <div className="max-w-4xl space-y-6">
           <ConfigForm />
+
+          <div className="glass-card p-6">
+            <h2 className="text-xl font-bold mb-2">Premios Especiales / Números Premiados</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Asigna premios sorpresa a números específicos. Estos premios se revelarán al público en la página de ganadores cuando los actives.
+            </p>
+            <SpecialPrizesForm />
+          </div>
 
           <div className="glass-card p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

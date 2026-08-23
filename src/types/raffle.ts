@@ -59,3 +59,14 @@ export interface PricingTier {
   label: string;
   savings?: string;
 }
+
+export interface SpecialPrize {
+  id: string;
+  raffleId?: string;
+  ticketNumber: number;
+  prizeType: 'article' | 'money';
+  prizeDescription: string;
+  prizeAmount?: number;
+  isActive: boolean;
+  createdAt?: string;
+}

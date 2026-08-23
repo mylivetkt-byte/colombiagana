@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { RaffleConfig, TicketPurchase } from '@/types/raffle';
+import { RaffleConfig, TicketPurchase, SpecialPrize } from '@/types/raffle';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RaffleState {
   config: RaffleConfig;
   purchases: TicketPurchase[];
   soldNumbers: number[];
+  specialPrizes: SpecialPrize[];
   isLoading: boolean;
   configId: string | null;
   setConfig: (config: Partial<RaffleConfig>) => void;
@@ -18,6 +19,10 @@ interface RaffleState {
   resetRaffle: () => Promise<void>;
   getAvailableNumbers: () => number[];
   generateRandomNumbers: (quantity: number) => number[];
+  loadSpecialPrizes: () => Promise<void>;
+  addSpecialPrize: (prize: Omit<SpecialPrize, 'id' | 'createdAt'>) => Promise<boolean>;
+  updateSpecialPrize: (id: string, changes: Partial<SpecialPrize>) => Promise<boolean>;
+  deleteSpecialPrize: (id: string) => Promise<boolean>;
 }
 
 const defaultConfig: RaffleConfig = {
@@ -55,6 +60,7 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
   config: defaultConfig,
   purchases: [],
   soldNumbers: [],
+  specialPrizes: [],
   isLoading: false,
   configId: null,
   
@@ -313,5 +319,91 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
     const available = get().getAvailableNumbers();
     const shuffled = [...available].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, quantity);
+  },
+
+  loadSpecialPrizes: async () => {
+    try {
+      const { configId } = get();
+      let query = supabase.from('special_prizes').select('*').order('created_at', { ascending: true });
+      if (configId) query = query.eq('raffle_id', configId);
+      const { data, error } = await query;
+      if (error) { console.error('Error loading special prizes:', error); return; }
+      const prizes: SpecialPrize[] = (data || []).map(p => ({
+        id: p.id,
+        raffleId: p.raffle_id || undefined,
+        ticketNumber: p.ticket_number,
+        prizeType: p.prize_type as 'article' | 'money',
+        prizeDescription: p.prize_description,
+        prizeAmount: p.prize_amount ? Number(p.prize_amount) : undefined,
+        isActive: p.is_active,
+        createdAt: p.created_at
+      }));
+      set({ specialPrizes: prizes });
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  },
+
+  addSpecialPrize: async (prize) => {
+    try {
+      const { configId } = get();
+      const { data, error } = await supabase
+        .from('special_prizes')
+        .insert({
+          raffle_id: configId,
+          ticket_number: prize.ticketNumber,
+          prize_type: prize.prizeType,
+          prize_description: prize.prizeDescription,
+          prize_amount: prize.prizeAmount ?? null,
+          is_active: prize.isActive
+        })
+        .select()
+        .single();
+      if (error) { console.error('Error adding special prize:', error); return false; }
+      const newPrize: SpecialPrize = {
+        id: data.id,
+        raffleId: data.raffle_id || undefined,
+        ticketNumber: data.ticket_number,
+        prizeType: data.prize_type as 'article' | 'money',
+        prizeDescription: data.prize_description,
+        prizeAmount: data.prize_amount ? Number(data.prize_amount) : undefined,
+        isActive: data.is_active,
+        createdAt: data.created_at
+      };
+      set(state => ({ specialPrizes: [...state.specialPrizes, newPrize] }));
+      return true;
+    } catch (error) {
+      console.error('Error:', error); return false;
+    }
+  },
+
+  updateSpecialPrize: async (id, changes) => {
+    try {
+      const updateData: any = {};
+      if (changes.isActive !== undefined) updateData.is_active = changes.isActive;
+      if (changes.prizeDescription !== undefined) updateData.prize_description = changes.prizeDescription;
+      if (changes.prizeType !== undefined) updateData.prize_type = changes.prizeType;
+      if (changes.prizeAmount !== undefined) updateData.prize_amount = changes.prizeAmount;
+      if (changes.ticketNumber !== undefined) updateData.ticket_number = changes.ticketNumber;
+      const { error } = await supabase.from('special_prizes').update(updateData).eq('id', id);
+      if (error) { console.error('Error updating special prize:', error); return false; }
+      set(state => ({
+        specialPrizes: state.specialPrizes.map(p => p.id === id ? { ...p, ...changes } : p)
+      }));
+      return true;
+    } catch (error) {
+      console.error('Error:', error); return false;
+    }
+  },
+
+  deleteSpecialPrize: async (id) => {
+    try {
+      const { error } = await supabase.from('special_prizes').delete().eq('id', id);
+      if (error) { console.error('Error deleting special prize:', error); return false; }
+      set(state => ({ specialPrizes: state.specialPrizes.filter(p => p.id !== id) }));
+      return true;
+    } catch (error) {
+      console.error('Error:', error); return false;
+    }
   }
 }));

@@ -9,6 +9,14 @@ export interface PaymentMethod {
   isActive: boolean;
 }
 
+export interface PricingPlan {
+  id: string;
+  quantity: number;
+  price: number;
+  label?: string;
+  isPopular?: boolean;
+}
+
 export interface RaffleConfig {
   id: string;
   title: string;
@@ -26,6 +34,7 @@ export interface RaffleConfig {
   isActive: boolean;
   specifications: string[];
   paymentMethods: PaymentMethod[];
+  plans?: PricingPlan[];
 }
 
 export interface TicketPurchase {

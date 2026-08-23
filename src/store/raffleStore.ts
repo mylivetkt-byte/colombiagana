@@ -30,10 +30,10 @@ const defaultConfig: RaffleConfig = {
   drawDate: '2024-12-31',
   startNumber: 1000,
   endNumber: 9999,
-  priceOne: 10,
-  priceTwo: 18,
-  priceThree: 25,
-  currency: 'USD',
+  priceOne: 2000,
+  priceTwo: 4000,
+  priceThree: 8000,
+  currency: 'COP',
   isActive: true,
   specifications: [
     'Sorteo en vivo por Facebook Live',
@@ -41,7 +41,13 @@ const defaultConfig: RaffleConfig = {
     'El ganador será contactado por teléfono y correo',
     'Premio entregado en 24-48 horas'
   ],
-  paymentMethods: []
+  paymentMethods: [],
+  plans: [
+    { id: '1', quantity: 1, price: 2000, label: 'Una Boleta' },
+    { id: '2', quantity: 2, price: 4000, label: 'Dos Boletas' },
+    { id: '3', quantity: 3, price: 8000, label: 'Tres Boletas', isPopular: true },
+    { id: '4', quantity: 4, price: 10000, label: 'Cuatro Boletas' },
+  ]
 };
 
 export const useRaffleStore = create<RaffleState>((set, get) => ({
@@ -70,6 +76,15 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
       }
 
       if (data) {
+        const loadedPlans = (data as any).pricing_plans;
+        const plans = Array.isArray(loadedPlans) && loadedPlans.length > 0
+          ? loadedPlans
+          : [
+              { id: '1', quantity: 1, price: Number(data.price_one) || 2000, label: 'Una Boleta' },
+              { id: '2', quantity: 2, price: Number(data.price_two) || 4000, label: 'Dos Boletas' },
+              { id: '3', quantity: 3, price: Number(data.price_three) || 8000, label: 'Tres Boletas', isPopular: true },
+            ];
+
         set({
           configId: data.id,
           config: {
@@ -88,7 +103,8 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
             currency: data.currency,
             isActive: data.is_active,
             specifications: data.specifications || [],
-            paymentMethods: (data as any).payment_methods || []
+            paymentMethods: (data as any).payment_methods || [],
+            plans: plans
           }
         });
       }
@@ -101,9 +117,10 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
 
   saveConfig: async () => {
     const { config, configId } = get();
+    const plansToSave = config.plans && config.plans.length > 0 ? config.plans : defaultConfig.plans;
     
     try {
-      const updateData = {
+      const updateData: any = {
         title: config.title,
         description: config.description,
         prize: config.prize,
@@ -112,13 +129,14 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
         draw_date: config.drawDate || null,
         start_number: config.startNumber,
         end_number: config.endNumber,
-        price_one: config.priceOne,
-        price_two: config.priceTwo,
-        price_three: config.priceThree,
+        price_one: plansToSave?.[0]?.price ?? config.priceOne,
+        price_two: plansToSave?.[1]?.price ?? config.priceTwo,
+        price_three: plansToSave?.[2]?.price ?? config.priceThree,
         currency: config.currency,
         is_active: config.isActive,
         specifications: config.specifications,
-        payment_methods: JSON.parse(JSON.stringify(config.paymentMethods))
+        payment_methods: JSON.parse(JSON.stringify(config.paymentMethods)),
+        pricing_plans: JSON.parse(JSON.stringify(plansToSave))
       };
 
       if (configId) {

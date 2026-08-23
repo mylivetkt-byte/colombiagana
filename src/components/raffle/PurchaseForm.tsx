@@ -24,11 +24,18 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
   });
 
   const getPrice = () => {
+    if (config.plans && config.plans.length > 0) {
+      const match = config.plans.find(p => p.quantity === selectedQuantity);
+      if (match) return match.price;
+    }
     switch (selectedQuantity) {
       case 1: return config.priceOne;
       case 2: return config.priceTwo;
       case 3: return config.priceThree;
-      default: return 0;
+      default: {
+        const singlePrice = config.priceOne || 2000;
+        return singlePrice * selectedQuantity;
+      }
     }
   };
 

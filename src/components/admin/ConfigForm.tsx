@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRaffleStore } from '@/store/raffleStore';
+import { PricingPlan } from '@/types/raffle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Save, Plus, X, Image, DollarSign, Calendar, Hash, Loader2, CreditCard, Upload } from 'lucide-react';
+import { Save, Plus, X, Image, DollarSign, Calendar, Hash, Loader2, CreditCard, Upload, Trash2 } from 'lucide-react';
 import { PaymentMethodsForm } from './PaymentMethodsForm';
 import { supabase } from '@/integrations/supabase/client';
+
 export function ConfigForm() {
   const { config, setConfig, saveConfig, loadConfig, isLoading } = useRaffleStore();
   const [localConfig, setLocalConfig] = useState(config);
@@ -26,6 +28,44 @@ export function ConfigForm() {
   useEffect(() => {
     setLocalConfig(config);
   }, [config]);
+
+  const addPlan = () => {
+    const currentPlans = localConfig.plans || [];
+    const nextQty = currentPlans.length > 0 ? Math.max(...currentPlans.map(p => p.quantity)) + 1 : 1;
+    const newPlan: PricingPlan = {
+      id: Date.now().toString(),
+      quantity: nextQty,
+      price: nextQty * 2000,
+      label: `${nextQty} Boleta${nextQty > 1 ? 's' : ''}`,
+      isPopular: false
+    };
+    setLocalConfig(prev => ({
+      ...prev,
+      plans: [...(prev.plans || []), newPlan]
+    }));
+  };
+
+  const updatePlan = (id: string, field: keyof PricingPlan, value: any) => {
+    setLocalConfig(prev => ({
+      ...prev,
+      plans: (prev.plans || []).map(p => {
+        if (field === 'isPopular' && value === true) {
+          return p.id === id ? { ...p, isPopular: true } : { ...p, isPopular: false };
+        }
+        if (p.id === id) {
+          return { ...p, [field]: value };
+        }
+        return p;
+      })
+    }));
+  };
+
+  const removePlan = (id: string) => {
+    setLocalConfig(prev => ({
+      ...prev,
+      plans: (prev.plans || []).filter(p => p.id !== id)
+    }));
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -215,61 +255,88 @@ export function ConfigForm() {
         </div>
       </div>
 
-      {/* Precios */}
+      {/* Precios y Planes */}
       <div className="glass-card p-6">
-        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center">
-            <DollarSign className="w-4 h-4 text-primary-foreground" />
-          </div>
-          Configuración de Precios
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg gold-gradient flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-primary-foreground" />
+            </div>
+            Configuración de Precios y Planes
+          </h2>
+          <Button type="button" onClick={addPlan} variant="outline" className="gap-2 border-primary/30 shrink-0">
+            <Plus className="w-4 h-4" /> Agregar Plan
+          </Button>
+        </div>
         
-        <div className="grid gap-6 md:grid-cols-4">
-          <div className="space-y-2">
-            <Label>Moneda</Label>
-            <Input
-              value={localConfig.currency}
-              onChange={(e) => setLocalConfig(prev => ({ ...prev, currency: e.target.value }))}
-              className="bg-input"
-              placeholder="USD"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Precio 1 Boleta</Label>
-            <Input
-              type="number"
-              value={localConfig.priceOne}
-              onChange={(e) => setLocalConfig(prev => ({ ...prev, priceOne: parseFloat(e.target.value) || 0 }))}
-              className="bg-input"
-              min={0}
-              step={0.01}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Precio 2 Boletas</Label>
-            <Input
-              type="number"
-              value={localConfig.priceTwo}
-              onChange={(e) => setLocalConfig(prev => ({ ...prev, priceTwo: parseFloat(e.target.value) || 0 }))}
-              className="bg-input"
-              min={0}
-              step={0.01}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Precio 3 Boletas</Label>
-            <Input
-              type="number"
-              value={localConfig.priceThree}
-              onChange={(e) => setLocalConfig(prev => ({ ...prev, priceThree: parseFloat(e.target.value) || 0 }))}
-              className="bg-input"
-              min={0}
-              step={0.01}
-            />
-          </div>
+        <div className="mb-6 max-w-xs space-y-2">
+          <Label>Moneda</Label>
+          <Input
+            value={localConfig.currency}
+            onChange={(e) => setLocalConfig(prev => ({ ...prev, currency: e.target.value }))}
+            className="bg-input"
+            placeholder="COP"
+          />
+        </div>
+
+        <div className="space-y-4">
+          <Label className="text-base font-semibold">Planes de Boletas Disponibles</Label>
+          {(localConfig.plans || []).map((plan, index) => (
+            <div key={plan.id || index} className="p-4 bg-muted/40 border border-border/50 rounded-xl space-y-3 md:space-y-0 md:flex md:items-center md:gap-4">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Etiqueta del Plan</Label>
+                  <Input
+                    value={plan.label || ''}
+                    onChange={(e) => updatePlan(plan.id, 'label', e.target.value)}
+                    placeholder="Ej. Cuatro Boletas"
+                    className="bg-input text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Cant. Boletas</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={plan.quantity}
+                    onChange={(e) => updatePlan(plan.id, 'quantity', parseInt(e.target.value) || 1)}
+                    className="bg-input text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Precio ({localConfig.currency})</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={plan.price}
+                    onChange={(e) => updatePlan(plan.id, 'price', parseFloat(e.target.value) || 0)}
+                    className="bg-input text-sm font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between md:justify-end gap-4 shrink-0 pt-2 md:pt-0">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={!!plan.isPopular}
+                    onCheckedChange={(checked) => updatePlan(plan.id, 'isPopular', checked)}
+                  />
+                  <span className="text-xs text-muted-foreground">Más popular</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={() => removePlan(plan.id)}
+                  disabled={(localConfig.plans || []).length <= 1}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

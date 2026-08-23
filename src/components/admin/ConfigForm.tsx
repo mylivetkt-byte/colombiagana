@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Save, Plus, X, Image, DollarSign, Calendar, Hash, Loader2, CreditCard, Upload, Trash2 } from 'lucide-react';
+import { Save, Plus, X, Image, DollarSign, Calendar, Hash, Loader2, CreditCard, Upload, Trash2, Mail } from 'lucide-react';
 import { PaymentMethodsForm } from './PaymentMethodsForm';
 import { supabase } from '@/integrations/supabase/client';
 

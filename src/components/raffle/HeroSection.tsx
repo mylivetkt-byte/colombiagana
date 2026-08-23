@@ -2,12 +2,14 @@ import { useRaffleStore } from '@/store/raffleStore';
 import { Calendar, Trophy, Ticket } from 'lucide-react';
 import { Countdown } from './Countdown';
 import { ShareRaffle } from './ShareRaffle';
+import { cn } from '@/lib/utils';
 
 export function HeroSection() {
   const { config, soldNumbers } = useRaffleStore();
   const totalNumbers = config.endNumber - config.startNumber + 1;
   const availableCount = totalNumbers - soldNumbers.length;
   const soldPercentage = (soldNumbers.length / totalNumbers) * 100;
+  const shouldShowDrawDate = (config.showDrawDate ?? true) && Boolean(config.drawDate);
 
   return (
     <section className="relative py-20 overflow-hidden">
@@ -67,21 +69,22 @@ export function HeroSection() {
             </div>
           </div>
 
-          <Countdown date={config.drawDate} />
+          {shouldShowDrawDate && <Countdown date={config.drawDate} />}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-
-            <div className="glass-card p-4">
-              <Calendar className="w-6 h-6 text-primary mx-auto mb-2" />
-              <div className="text-sm text-muted-foreground">Fecha del sorteo</div>
-              <div className="font-semibold">
-                {new Date(config.drawDate).toLocaleDateString('es-ES', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric'
-                })}
+          <div className={cn("grid gap-6 mx-auto", shouldShowDrawDate ? "grid-cols-1 md:grid-cols-3 max-w-2xl" : "grid-cols-1 md:grid-cols-2 max-w-lg")}>
+            {shouldShowDrawDate && (
+              <div className="glass-card p-4">
+                <Calendar className="w-6 h-6 text-primary mx-auto mb-2" />
+                <div className="text-sm text-muted-foreground">Fecha del sorteo</div>
+                <div className="font-semibold">
+                  {new Date(config.drawDate).toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </div>
               </div>
-            </div>
+            )}
             
             <div className="glass-card p-4">
               <Ticket className="w-6 h-6 text-accent mx-auto mb-2" />

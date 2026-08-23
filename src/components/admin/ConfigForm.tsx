@@ -230,17 +230,30 @@ export function ConfigForm() {
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" /> Fecha del Sorteo
-            </Label>
-            <Input
-              type="date"
-              value={localConfig.drawDate}
-              onChange={(e) => setLocalConfig(prev => ({ ...prev, drawDate: e.target.value }))}
-              className="bg-input"
+          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl md:col-span-2">
+            <div>
+              <Label>Mostrar Fecha del Sorteo y Contador</Label>
+              <p className="text-sm text-muted-foreground">Si está desactivado, la fecha y la cuenta regresiva permanecerán ocultas en la página principal</p>
+            </div>
+            <Switch
+              checked={localConfig.showDrawDate ?? true}
+              onCheckedChange={(checked) => setLocalConfig(prev => ({ ...prev, showDrawDate: checked }))}
             />
           </div>
+
+          {(localConfig.showDrawDate ?? true) && (
+            <div className="space-y-2 md:col-span-2">
+              <Label className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" /> Fecha del Sorteo
+              </Label>
+              <Input
+                type="date"
+                value={localConfig.drawDate}
+                onChange={(e) => setLocalConfig(prev => ({ ...prev, drawDate: e.target.value }))}
+                className="bg-input max-w-xs"
+              />
+            </div>
+          )}
           
           <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl md:col-span-2">
             <div>

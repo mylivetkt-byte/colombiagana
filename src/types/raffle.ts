@@ -25,6 +25,7 @@ export interface RaffleConfig {
   prizeImage: string;
   bannerImage: string;
   drawDate: string;
+  showDrawDate?: boolean;
   startNumber: number;
   endNumber: number;
   priceOne: number;

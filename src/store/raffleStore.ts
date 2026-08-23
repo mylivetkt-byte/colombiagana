@@ -307,12 +307,24 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
   },
   
   getAvailableNumbers: () => {
-    const { config, soldNumbers } = get();
+    const { config, soldNumbers, specialPrizes } = get();
     const allNumbers = Array.from(
       { length: config.endNumber - config.startNumber + 1 }, 
       (_, i) => config.startNumber + i
     );
-    return allNumbers.filter(n => !soldNumbers.includes(n));
+    const totalNumbers = config.endNumber - config.startNumber + 1;
+    const soldPercentage = totalNumbers > 0 ? (soldNumbers.length / totalNumbers) * 100 : 0;
+    
+    let available = allNumbers.filter(n => !soldNumbers.includes(n));
+    
+    if (soldPercentage < 30) {
+      const prizeNumbers = specialPrizes
+        .map(p => p.ticketNumber)
+        .filter((n): n is number => n !== null);
+      available = available.filter(n => !prizeNumbers.includes(n));
+    }
+    
+    return available;
   },
   
   generateRandomNumbers: (quantity) => {

@@ -161,14 +161,23 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
                           if (error || !data?.success) {
                             const detail = data?.error || error?.message || 'Error desconocido';
                             console.error('Error resending ticket email:', detail);
-                            toast.error(`No se pudo reenviar el correo: ${detail}`);
+                            if (detail.includes('CORS') || detail.includes('Failed to send a request')) {
+                              toast.error('Error de conexión con el servidor de correo. Contactá al administrador.');
+                            } else {
+                              toast.error(`No se pudo reenviar el correo: ${detail}`);
+                            }
                             return;
                           }
                           
                           toast.success('Correo reenviado exitosamente');
-                        } catch (error) {
+                        } catch (error: any) {
                           console.error('Error invoking send-ticket-email:', error);
-                          toast.error('Error al reenviar el correo');
+                          const msg = error?.message || '';
+                          if (msg.includes('CORS') || msg.includes('Failed to send a request')) {
+                            toast.error('Error de conexión con el servidor de correo (CORS). Verificá la configuración en Supabase.');
+                          } else {
+                            toast.error('Error al reenviar el correo');
+                          }
                         }
                       }}
                     >

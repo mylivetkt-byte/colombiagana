@@ -138,11 +138,24 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("send-ticket-email failed", { status: response.status, body: errorText });
+      
+      await supabase
+        .from("ticket_purchases")
+        .update({ email_error: `Brevo ${response.status}: ${errorText}` })
+        .eq("id", purchaseId);
+      
       return new Response(
-        JSON.stringify({ error: "Failed to send email", detail: responseText }),
+        JSON.stringify({ error: "Failed to send email", detail: errorText }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    await supabase
+      .from("ticket_purchases")
+      .update({ email_sent_at: new Date().toISOString(), email_error: null })
+      .eq("id", purchaseId);
 
     return new Response(
       JSON.stringify({ success: true }),

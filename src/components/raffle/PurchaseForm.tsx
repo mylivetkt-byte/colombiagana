@@ -55,16 +55,29 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
       }
 
       // Guardar en la base de datos
-      const { data: raffleConfig } = await supabase
+      const { data: raffleConfig, error: configError } = await supabase
         .from('raffle_config')
         .select('id')
         .limit(1)
         .maybeSingle();
 
+      if (configError) {
+        console.error('Error loading raffle config:', configError);
+        toast.error('Error al cargar la configuración de la rifa');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!raffleConfig?.id) {
+        toast.error('No hay configuración de rifa. Contacta al administrador.');
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('ticket_purchases')
         .insert({
-          raffle_id: raffleConfig?.id,
+          raffle_id: raffleConfig.id,
           buyer_name: formData.name,
           buyer_email: formData.email,
           buyer_phone: formData.phone,
@@ -79,7 +92,8 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
 
       if (error) {
         console.error('Error saving purchase:', error);
-        toast.error('Error al guardar la compra');
+        const msg = error.message || 'Error desconocido';
+        toast.error(`Error al guardar la compra: ${msg}`);
         setIsLoading(false);
         return;
       }
@@ -100,10 +114,9 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
       
       onPurchaseComplete(purchase);
       toast.success('¡Compra registrada! Procede al pago');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
-      toast.error('Error al procesar la compra');
-    } finally {
+      toast.error(`Error al procesar la compra: ${error?.message || 'Error desconocido'}`);
       setIsLoading(false);
     }
   };

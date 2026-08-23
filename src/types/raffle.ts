@@ -51,6 +51,8 @@ export interface TicketPurchase {
   paymentStatus: 'pending' | 'verified' | 'cancelled';
   paymentMethod: string;
   paymentImageUrl?: string;
+  emailSentAt?: string;
+  emailError?: string;
 }
 
 export interface PricingTier {

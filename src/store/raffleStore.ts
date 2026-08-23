@@ -218,7 +218,9 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
           purchaseDate: p.created_at,
           paymentStatus: p.payment_status as 'pending' | 'verified' | 'cancelled',
           paymentMethod: p.payment_method || 'pending',
-          paymentImageUrl: p.payment_image_url || undefined
+          paymentImageUrl: p.payment_image_url || undefined,
+          emailSentAt: p.email_sent_at || undefined,
+          emailError: p.email_error || undefined
         }));
 
         // Solo contar como vendidos los números de compras NO canceladas

@@ -59,6 +59,17 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
     );
   }
 
+  const getEmailStatus = (purchase: TicketPurchase) => {
+    if (purchase.paymentStatus !== 'verified') return null;
+    if (purchase.emailSentAt) {
+      return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Enviado</Badge>;
+    }
+    if (purchase.emailError) {
+      return <Badge variant="destructive" title={purchase.emailError}>Error</Badge>;
+    }
+    return <Badge variant="secondary">Pendiente</Badge>;
+  };
+
   return (
     <>
       <div className="glass-card overflow-hidden">
@@ -71,6 +82,7 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
               <TableHead>Total</TableHead>
               <TableHead>Comprobante</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead>Correo</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
@@ -111,6 +123,7 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
                   )}
                 </TableCell>
                 <TableCell>{getStatusBadge(purchase.paymentStatus)}</TableCell>
+                <TableCell>{getEmailStatus(purchase)}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {new Date(purchase.purchaseDate).toLocaleDateString('es-ES')}
                 </TableCell>

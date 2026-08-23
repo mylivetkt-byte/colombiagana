@@ -45,12 +45,19 @@ export const TicketLookup = () => {
     specialPrizes.filter(p => p.ticketNumber !== null).map(p => [String(p.ticketNumber), p])
   );
 
-  // Cada premio se revela cuando se vende el % correspondiente a su posición en el rango.
-  // Ejemplo: rango 1000-9999, premio en 3250 → se revela al ~25%.
-  // Mínimo 30% para cualquier premio.
+  // Revelación secuencial: los premios se van desbloqueando de a uno a medida
+  // que avanza la venta, desde el 30% hasta el 70%.
+  // Ejemplo con 10 premios: 30%, 34%, 38%, 42%, 46%, 50%, 54%, 58%, 62%, 66%
+  const sortedPrizes = specialPrizes
+    .filter(p => p.ticketNumber !== null)
+    .sort((a, b) => a.ticketNumber! - b.ticketNumber!);
+  
   const getPrizeUnlockThreshold = (ticketNumber: number) => {
-    const position = (ticketNumber - config.startNumber) / totalNumbers;
-    return Math.max(30, position * 100);
+    const index = sortedPrizes.findIndex(p => p.ticketNumber === ticketNumber);
+    if (index === -1) return 100;
+    const total = sortedPrizes.length;
+    const step = total > 1 ? 40 / (total - 1) : 0;
+    return 30 + index * step;
   };
 
   const search = async (e: React.FormEvent) => {

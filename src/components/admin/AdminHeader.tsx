@@ -38,7 +38,7 @@ export function AdminHeader() {
           <Link to="/admin/purchases" className="shrink-0">
             <Button variant="ghost" size="sm" className="gap-2 px-2 sm:px-3">
               <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Compradores</span>
+              <span className="hidden sm:inline">Verificados</span>
             </Button>
           </Link>
           <Link to="/admin/chat" className="shrink-0">

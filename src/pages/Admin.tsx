@@ -28,10 +28,14 @@ export default function Admin() {
 
         <div className="grid lg:grid-cols-2 gap-8">
           <div>
-            <h2 className="text-xl font-bold mb-4">Últimas Compras</h2>
-            <PurchasesTable purchases={purchases} />
+            <h2 className="text-xl font-bold mb-4">
+              Por verificar ({purchases.filter((p) => p.paymentStatus === 'pending').length})
+            </h2>
+            <PurchasesTable
+              purchases={purchases.filter((p) => p.paymentStatus === 'pending')}
+            />
           </div>
-          
+           
           <div>
             <h2 className="text-xl font-bold mb-4">Estado de Boletas</h2>
             <TicketGrid 

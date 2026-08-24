@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      push_subscriptions: {
+        Row: {
+          id: string
+          raffle_id: string | null
+          subscription: unknown
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          raffle_id?: string | null
+          subscription: unknown
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          raffle_id?: string | null
+          subscription?: unknown
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffle_config"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       raffle_config: {
         Row: {
           banner_image: string | null

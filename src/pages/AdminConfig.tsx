@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { ConfigForm } from '@/components/admin/ConfigForm';
 import { SpecialPrizesForm } from '@/components/admin/SpecialPrizesForm';
+import { NotificationSettings } from '@/components/admin/NotificationSettings';
 import { useRaffleStore } from '@/store/raffleStore';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +48,8 @@ export default function AdminConfig() {
 
         <div className="max-w-4xl space-y-6">
           <ConfigForm />
+
+          <NotificationSettings />
 
           <div className="glass-card p-6">
             <h2 className="text-xl font-bold mb-2">Premios Especiales / Números Premiados</h2>

@@ -135,6 +135,14 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
         </p>
       </div>
 
+      <div className="flex items-start gap-3 bg-primary/10 border border-primary/30 rounded-xl p-4 mb-8 animate-fade-in">
+        <Loader2 className="w-5 h-5 text-primary mt-0.5 animate-spin shrink-0" />
+        <p className="text-sm leading-relaxed">
+          <strong>Tu pago se está procesando.</strong> En cuanto sea verificado, tus boletas llegarán automáticamente a{' '}
+          <strong>{purchase.buyerEmail}</strong>.
+        </p>
+      </div>
+
       <div className="bg-muted/50 rounded-xl p-6 mb-8">
         <h3 className="font-semibold mb-4">Resumen de tu compra</h3>
         <div className="space-y-3">

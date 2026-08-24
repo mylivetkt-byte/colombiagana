@@ -113,7 +113,7 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
       };
       
       onPurchaseComplete(purchase);
-      toast.success('¡Compra registrada! Procede al pago');
+      toast.success(`¡Compra registrada! Tu pago se está procesando. Tus boletas llegarán a ${purchase.buyerEmail} una vez verificado el pago.`);
     } catch (error: any) {
       console.error('Error:', error);
       toast.error(`Error al procesar la compra: ${error?.message || 'Error desconocido'}`);

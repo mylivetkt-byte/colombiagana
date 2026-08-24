@@ -22,7 +22,7 @@
   import { supabase } from '@/integrations/supabase/client';
 
   export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
-    const { config, updatePurchaseStatus } = useRaffleStore();
+    const { config, updatePurchaseStatus, loadPurchases } = useRaffleStore();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const digitCount = String(config.endNumber).length;
 
@@ -59,61 +59,17 @@
     };
 
     const sendTicketEmail = async (purchase: TicketPurchase) => {
-      const apiKey = config.brevoApiKey;
-      const senderEmail = config.brevoSenderEmail;
-      const senderName = config.brevoSenderName;
-
-      if (!apiKey || !senderEmail) {
-        toast.error('Configura las credenciales de Brevo en la sección Configuración General');
-        return;
-      }
-
-      const ticketNumbers = purchase.ticketNumbers.map(n => String(n).padStart(digitCount, '0')).join(', ');
-      const subject = `¡Tus números de rifa! ${config.title || 'Colombia Gana'}`;
-      const htmlContent = `
-        <h2>¡Felicidades! Tu pago ha sido verificado</h2>
-        <p>Hola <strong>${purchase.buyerName}</strong>,</p>
-        <p>Tus números para la rifa <strong>${config.title || 'Colombia Gana'}</strong> son:</p>
-        <p style="font-size:20px; font-weight:bold; letter-spacing:1px; color:#d4af37;">${ticketNumbers}</p>
-        <p>Cantidad: <strong>${purchase.quantity}</strong></p>
-        <p>Total pagado: <strong>${purchase.totalPrice}</strong></p>
-        <p>Guarda este correo como comprobante. ¡Mucha suerte!</p>
-      `;
-
       try {
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'api-key': apiKey,
-            'content-type': 'application/json'
-          },
-          body: JSON.stringify({
-            sender: { name: senderName || 'ColombiaGana', email: senderEmail },
-            to: [{ email: purchase.buyerEmail, name: purchase.buyerName }],
-            subject,
-            htmlContent
-          })
+        const { data, error } = await supabase.functions.invoke("send-ticket-email", {
+          body: { purchaseId: purchase.id },
         });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Brevo ${response.status}: ${errorText}`);
-        }
-
-        await supabase
-          .from('ticket_purchases')
-          .update({ email_sent_at: new Date().toISOString(), email_error: null })
-          .eq('id', purchase.id);
-
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
         toast.success('Correo enviado exitosamente');
+        loadPurchases();
       } catch (error: any) {
         console.error('Error sending email:', error);
-        await supabase
-          .from('ticket_purchases')
-          .update({ email_error: error.message })
-          .eq('id', purchase.id);
-        toast.error(`No se pudo enviar el correo: ${error.message}`);
+        toast.error(`No se pudo enviar el correo: ${error?.message || 'Error desconocido'}`);
       }
     };
 

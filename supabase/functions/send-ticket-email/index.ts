@@ -25,13 +25,6 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const brevoApiKey = Deno.env.get("BREVO_API_KEY");
-
-    console.log("send-ticket-email env check", {
-      hasUrl: !!supabaseUrl,
-      hasServiceRole: !!serviceRoleKey,
-      hasBrevoKey: !!brevoApiKey,
-    });
 
     if (!supabaseUrl || !serviceRoleKey) {
       return new Response(
@@ -48,10 +41,13 @@ Deno.serve(async (req) => {
       .eq("id", purchaseId)
       .single();
 
+    const raffle = (purchase?.raffle_config as any);
+
     console.log("send-ticket-email purchase lookup", {
       found: !!purchase,
       error: error ? error.message : null,
       buyerEmail: purchase?.buyer_email || null,
+      raffle: raffle?.title,
     });
 
     if (error || !purchase) {
@@ -61,72 +57,91 @@ Deno.serve(async (req) => {
       );
     }
 
-    const raffle = purchase.raffle_config as any;
-    const ticketNumbers = Array.isArray(purchase.ticket_numbers)
-      ? purchase.ticket_numbers.map((n: number) => String(n)).join(", ")
-      : "";
+    // Solo se envían los números cuando el pago está verificado
+    if (purchase.payment_status !== "verified") {
+      return new Response(
+        JSON.stringify({ error: "El pago aún no está verificado" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>Tus números de rifa</title>
-        </head>
-        <body style="margin:0; padding:0; background-color:#f6f6f6; font-family:Arial,Helvetica,sans-serif;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-            <tr>
-              <td align="center" style="padding:24px 0;">
-                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="border-collapse:collapse; background-color:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e5e7eb;">
-                  <tr>
-                    <td style="background: linear-gradient(90deg, #d4af37, #fcd34d); padding:20px 24px; text-align:center;">
-                      <h1 style="margin:0; font-size:22px; color:#111827;">Colombia Gana</h1>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:24px;">
-                      <h2 style="margin:0 0 12px; font-size:18px; color:#111827;">¡Felicidades! Tu pago ha sido verificado</h2>
-                      <p style="margin:0 0 12px; font-size:14px; color:#374151;">Hola <strong>${purchase.buyer_name}</strong>,</p>
-                      <p style="margin:0 0 12px; font-size:14px; color:#374151;">Tus números para la rifa <strong>${raffle?.title ?? "Colombia Gana"}</strong> son:</p>
-                      <p style="margin:16px 0; font-size:20px; font-weight:bold; letter-spacing:1px; color:#d4af37;">${ticketNumbers}</p>
-                      <p style="margin:0 0 8px; font-size:14px; color:#374151;">Cantidad: <strong>${purchase.quantity}</strong></p>
-                      <p style="margin:0 0 8px; font-size:14px; color:#374151;">Total pagado: <strong>${purchase.total_price}</strong></p>
-                      <p style="margin:16px 0 0; font-size:12px; color:#6b7280;">Guarda este correo como comprobante. ¡Mucha suerte!</p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-      </html>
-    `;
+    // API key de Brevo: variable de entorno o configuración guardada en raffle_config
+    let brevoApiKey = Deno.env.get("BREVO_API_KEY") || "";
+    if (!brevoApiKey && raffle?.brevo_api_key) brevoApiKey = raffle.brevo_api_key;
+
+    const senderEmail = raffle?.brevo_sender_email || "noreply@colombiaga.com";
+    const senderName = raffle?.brevo_sender_name || "Colombia Gana";
 
     if (!brevoApiKey) {
       return new Response(
-        JSON.stringify({ error: "BREVO_API_KEY is not configured" }),
+        JSON.stringify({ error: "BREVO_API_KEY no configurada. Agrégala en Configuración." }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
+    const digitCount = String(raffle?.end_number ?? 9999).length;
+    const ticketNumbers = Array.isArray(purchase.ticket_numbers)
+      ? purchase.ticket_numbers.map((n: number) => String(n).padStart(digitCount, "0")).join(", ")
+      : "";
+
+    const eventName = raffle?.title || "Colombia Gana";
+
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tus números de rifa</title>
+  </head>
+  <body style="margin:0; padding:0; background-color:#f6f6f6; font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      <tr>
+        <td align="center" style="padding:24px 0;">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="border-collapse:collapse; background-color:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e5e7eb;">
+            <tr>
+              <td style="background: linear-gradient(90deg, #d4af37, #fcd34d); padding:20px 24px; text-align:center;">
+                <h1 style="margin:0; font-size:22px; color:#111827;">Colombia Gana</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px;">
+                <h2 style="margin:0 0 12px; font-size:18px; color:#111827;">¡Felicidades! Tu pago ha sido verificado</h2>
+                <p style="margin:0 0 12px; font-size:14px; color:#374151;">Hola <strong>${purchase.buyer_name}</strong>,</p>
+                <p style="margin:0 0 12px; font-size:14px; color:#374151;">Tus números para la rifa <strong>${eventName}</strong> son:</p>
+                <p style="margin:16px 0; font-size:20px; font-weight:bold; letter-spacing:1px; color:#d4af37;">${ticketNumbers}</p>
+                <p style="margin:0 0 8px; font-size:14px; color:#374151;">Cantidad: <strong>${purchase.quantity}</strong></p>
+                <p style="margin:0 0 8px; font-size:14px; color:#374151;">Total pagado: <strong>${purchase.total_price}</strong></p>
+                <p style="margin:16px 0 0; font-size:12px; color:#6b7280;">Guarda este correo como comprobante. ¡Mucha suerte!</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+    `;
+
     const brevoPayload = {
-      sender: { name: "ColombiaGana", email: "mylivetkt@gmail.com" },
+      sender: { name: senderName, email: senderEmail },
       to: [{ email: purchase.buyer_email, name: purchase.buyer_name }],
-      subject: `¡Tus números de rifa! ${raffle?.title ?? "Colombia Gana"}`,
+      subject: `¡Tus números de rifa! ${eventName}`,
       htmlContent: emailHtml,
     };
 
     console.log("send-ticket-email sending to Brevo", {
-      to: brevoPayload.to.map((x: any) => x.email),
+      to: purchase.buyer_email,
       subject: brevoPayload.subject,
+      from: `${senderName} <${senderEmail}>`,
     });
 
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        accept: "application/json",
         "api-key": brevoApiKey,
+        "content-type": "application/json",
       },
       body: JSON.stringify(brevoPayload),
     });
@@ -138,16 +153,13 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("send-ticket-email failed", { status: response.status, body: errorText });
-      
+      console.error("send-ticket-email failed", { status: response.status, body: responseText });
       await supabase
         .from("ticket_purchases")
-        .update({ email_error: `Brevo ${response.status}: ${errorText}` })
+        .update({ email_error: `Brevo ${response.status}: ${responseText}` })
         .eq("id", purchaseId);
-      
       return new Response(
-        JSON.stringify({ error: "Failed to send email", detail: errorText }),
+        JSON.stringify({ error: "Failed to send email", detail: responseText }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }

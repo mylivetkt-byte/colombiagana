@@ -528,7 +528,7 @@ export function ConfigForm() {
               placeholder="xkeysib-..."
             />
             <p className="text-xs text-muted-foreground">
-              Obtenela en Brevo → Settings → API Keys
+              Usa la API Key SMTP/transaccional de Brevo (SMTP &amp; API).
             </p>
           </div>
           
@@ -539,13 +539,14 @@ export function ConfigForm() {
               value={localConfig.brevoSenderEmail || ''}
               onChange={(e) => setLocalConfig(prev => ({ ...prev, brevoSenderEmail: e.target.value }))}
               className="bg-input"
-              placeholder="mylivetkt@gmail.com"
+              placeholder="remitente@tudominio.com"
             />
           </div>
           
           <div className="space-y-2">
             <Label>Nombre Remitente</Label>
             <Input
+              type="text"
               value={localConfig.brevoSenderName || ''}
               onChange={(e) => setLocalConfig(prev => ({ ...prev, brevoSenderName: e.target.value }))}
               className="bg-input"

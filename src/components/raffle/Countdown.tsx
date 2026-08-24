@@ -38,9 +38,9 @@ export function Countdown({ date }: CountdownProps) {
       <div className="text-sm text-muted-foreground mb-3">
         {time.total > 0 ? 'Faltan para el sorteo' : 'El sorteo ya se realizó'}
       </div>
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-2">
         {items.map((item) => (
-          <div key={item.label} className="glass-card px-4 py-3 min-w-[72px]">
+          <div key={item.label} className="glass-card px-2 py-3 flex-1 min-w-0">
             <div className="text-2xl md:text-3xl font-display gold-text">
               {String(item.value).padStart(2, '0')}
             </div>

@@ -48,7 +48,7 @@ export function HeroSection() {
             <span className="text-sm font-medium text-primary">SORTEO ACTIVO</span>
           </div>
           
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold mb-6 animate-fade-in">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold mb-6 animate-fade-in break-words">
             <span className="gold-text">{config.title}</span>
           </h1>
           

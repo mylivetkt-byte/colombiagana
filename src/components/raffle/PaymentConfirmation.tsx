@@ -154,9 +154,9 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
             <span className="text-muted-foreground">Cantidad:</span>
             <span>{purchase.quantity} boleta(s)</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between gap-2">
             <span className="text-muted-foreground">Correo:</span>
-            <span className="font-medium">{purchase.buyerEmail}</span>
+            <span className="font-medium break-all text-right">{purchase.buyerEmail}</span>
           </div>
           <div className="border-t border-border my-2" />
           <div className="flex justify-between text-lg">
@@ -262,7 +262,7 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
         </p>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <Button variant="outline" onClick={onBack} className="flex-1" disabled={isUploading}>
           Comprar más boletas
         </Button>

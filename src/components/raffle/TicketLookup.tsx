@@ -176,7 +176,7 @@ export const TicketLookup = () => {
                           <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-2xl blur opacity-25 pointer-events-none" />
 
                           {/* Stub izquierdo del boleto */}
-                          <div className="relative z-10 w-28 bg-muted/30 border-r border-dashed border-border flex flex-col items-center justify-center p-3 shrink-0">
+                          <div className="relative z-10 w-24 sm:w-28 bg-muted/30 border-r border-dashed border-border flex flex-col items-center justify-center p-3 shrink-0">
                             <div className="absolute -top-3 right-[-13px] w-6 h-6 rounded-full bg-background border border-border" />
                             <div className="absolute -bottom-3 right-[-13px] w-6 h-6 rounded-full bg-background border border-border" />
                             <Ticket className="w-5 h-5 text-muted-foreground mb-1" />
@@ -187,7 +187,7 @@ export const TicketLookup = () => {
                           </div>
 
                           {/* Contenido derecho */}
-                          <div className="relative z-10 flex-1 p-4 bg-background flex flex-col justify-center gap-1">
+                          <div className="relative z-10 flex-1 min-w-0 p-4 bg-background flex flex-col justify-center gap-1">
                             <div className="flex items-center gap-2">
                               {prize.prizeType === "money" ? (
                                 <span className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded bg-accent/15 text-accent">
@@ -199,7 +199,7 @@ export const TicketLookup = () => {
                                 </span>
                               )}
                             </div>
-                            <p className="font-bold text-base">{prize.prizeDescription}</p>
+                            <p className="font-bold text-base break-words">{prize.prizeDescription}</p>
                             {prize.prizeType === "money" && prize.prizeAmount && (
                               <p className="text-sm text-muted-foreground font-semibold">
                                 {formatMoney(prize.prizeAmount)} {config.currency}

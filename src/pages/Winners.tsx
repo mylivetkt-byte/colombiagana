@@ -109,7 +109,7 @@ export default function Winners() {
                   {/* Boleto con estilo dentado simulado */}
                   <div className="relative bg-background border border-border/80 rounded-2xl overflow-hidden shadow-xl flex">
                     {/* Left notch section (El boleto numérico) */}
-                    <div className="w-32 bg-muted/30 border-r border-dashed border-border p-4 flex flex-col items-center justify-center relative select-none shrink-0">
+                    <div className="w-24 sm:w-32 bg-muted/30 border-r border-dashed border-border p-4 flex flex-col items-center justify-center relative select-none shrink-0">
                       {/* Círculos de corte de boleto arriba y abajo */}
                       <div className="absolute -top-3 right-[-12px] w-6 h-6 rounded-full bg-background border border-border" />
                       <div className="absolute -bottom-3 right-[-12px] w-6 h-6 rounded-full bg-background border border-border" />
@@ -122,7 +122,7 @@ export default function Winners() {
                     </div>
 
                     {/* Right prize details section */}
-                    <div className="flex-1 p-6 flex flex-col justify-between space-y-4">
+                    <div className="flex-1 min-w-0 p-6 flex flex-col justify-between space-y-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           {prize.prizeType === 'money' ? (
@@ -146,7 +146,7 @@ export default function Winners() {
                           )}
                         </div>
 
-                        <h3 className="text-lg font-bold group-hover:text-primary transition-colors leading-snug">
+                          <h3 className="text-lg font-bold group-hover:text-primary transition-colors leading-snug break-words">
                           {prize.prizeDescription}
                         </h3>
                         {prize.prizeType === 'money' && prize.prizeAmount && (

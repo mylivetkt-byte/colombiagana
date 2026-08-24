@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Settings, LayoutDashboard, Users, Eye, LogOut } from 'lucide-react';
+import { Settings, LayoutDashboard, Users, Eye, LogOut, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export function AdminHeader() {
@@ -39,6 +39,12 @@ export function AdminHeader() {
             <Button variant="ghost" size="sm" className="gap-2">
               <Users className="w-4 h-4" />
               Compradores
+            </Button>
+          </Link>
+          <Link to="/admin/chat">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Chat
             </Button>
           </Link>
           <Link to="/">

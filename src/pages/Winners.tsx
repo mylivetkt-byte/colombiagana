@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Trophy, Gift, DollarSign, ArrowLeft, Ticket, Sparkles, Smile, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatMoney } from '@/lib/format';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 
 export default function Winners() {
   const { config, specialPrizes, purchases, loadSpecialPrizes, loadPurchases, loadConfig } = useRaffleStore();
@@ -181,6 +182,7 @@ export default function Winners() {
           </div>
         )}
       </div>
+      <ChatWidget />
     </div>
   );
 }

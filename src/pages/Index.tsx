@@ -10,6 +10,7 @@ import { useRaffleStore } from '@/store/raffleStore';
 import { TicketPurchase } from '@/types/raffle';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 
 export default function Index() {
   const [selectedQuantity, setSelectedQuantity] = useState<number | null>(null);
@@ -101,12 +102,7 @@ export default function Index() {
         </section>
       )}
 
-      {/* Footer */}
-      <footer className="py-8 border-t border-border/50">
-        <div className="container text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Sistema de Rifas. Todos los derechos reservados.</p>
-        </div>
-      </footer>
+      <ChatWidget />
     </div>
   );
 }

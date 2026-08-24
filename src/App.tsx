@@ -10,6 +10,7 @@ import Winners from "./pages/Winners";
 import Admin from "./pages/Admin";
 import AdminConfig from "./pages/AdminConfig";
 import AdminPurchases from "./pages/AdminPurchases";
+import AdminChatPage from "./pages/AdminChatPage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/admin/config" element={<ProtectedRoute><AdminConfig /></ProtectedRoute>} />
             <Route path="/admin/purchases" element={<ProtectedRoute><AdminPurchases /></ProtectedRoute>} />
+            <Route path="/admin/chat" element={<ProtectedRoute><AdminChatPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

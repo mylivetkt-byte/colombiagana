@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { HeroSection } from '@/components/raffle/HeroSection';
 import { PricingCards } from '@/components/raffle/PricingCards';
 import { PurchaseForm } from '@/components/raffle/PurchaseForm';
@@ -8,8 +7,6 @@ import { SpecificationsSection } from '@/components/raffle/SpecificationsSection
 import { TicketLookup } from '@/components/raffle/TicketLookup';
 import { useRaffleStore } from '@/store/raffleStore';
 import { TicketPurchase } from '@/types/raffle';
-import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
 import { ChatWidget } from '@/components/chat/ChatWidget';
 
 export default function Index() {
@@ -50,16 +47,6 @@ export default function Index() {
 
   return (
     <div className="min-h-screen">
-      {/* Admin Link */}
-      <div className="fixed top-4 right-4 z-50">
-        <Link to="/admin">
-          <Button variant="outline" size="sm" className="gap-2 border-primary/30 bg-background/80 backdrop-blur">
-            <Settings className="w-4 h-4" />
-            Admin
-          </Button>
-        </Link>
-      </div>
-
       <HeroSection />
 
       {config.isActive ? (

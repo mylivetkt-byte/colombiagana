@@ -113,7 +113,19 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
       };
       
       onPurchaseComplete(purchase);
-      toast.success(`¡Compra registrada! Tu pago se está procesando. Tus boletas llegarán a ${purchase.buyerEmail} una vez verificado el pago.`);
+      toast.custom(() => (
+        <div className="flex flex-col items-center gap-3 bg-card border-2 border-accent/40 shadow-2xl rounded-2xl p-6 max-w-sm mx-auto text-center animate-scale-in">
+          <div className="w-16 h-16 rounded-full gold-gradient flex items-center justify-center">
+            <CheckCircle className="w-9 h-9 text-primary-foreground" />
+          </div>
+          <h3 className="text-xl font-display font-bold text-foreground">¡Compra realizada!</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Tu pago se está procesando. Tus boletas llegarán a{' '}
+            <strong className="text-foreground">{purchase.buyerEmail}</strong> una vez verificado el pago.
+          </p>
+        </div>
+      ), { duration: 7000 });
+
     } catch (error: any) {
       console.error('Error:', error);
       toast.error(`Error al procesar la compra: ${error?.message || 'Error desconocido'}`);

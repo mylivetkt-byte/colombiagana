@@ -76,14 +76,12 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
         .from('payment-proofs')
         .getPublicUrl(fileName);
 
-      // Actualizar el registro de compra con la URL de la imagen
-      const { error: updateError } = await supabase
-        .from('ticket_purchases')
-        .update({ 
-          payment_image_url: publicUrl,
-          payment_method: 'comprobante_enviado'
-        })
-        .eq('id', purchase.id);
+      // Guardar la URL del comprobante en la compra (RPC con SECURITY DEFINER
+      // porque los compradores son usuarios anónimos y no tienen UPDATE en ticket_purchases)
+      const { error: updateError } = await supabase.rpc('submit_payment_proof', {
+        p_purchase_id: purchase.id,
+        p_image_url: publicUrl
+      });
 
       if (updateError) {
         console.error('Update error:', updateError);

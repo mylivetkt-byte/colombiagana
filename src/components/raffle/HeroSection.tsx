@@ -118,9 +118,9 @@ export function HeroSection() {
           {hasActivePrizes && (
             <div className="mt-8 animate-fade-in">
               <Link to="/ganadores">
-                <Button className="gold-gradient text-primary-foreground gap-2 px-8 py-6 text-lg font-bold rounded-2xl shadow-lg hover:opacity-90 transform hover:-translate-y-0.5 transition-all">
-                  <Trophy className="w-5 h-5 animate-pulse" />
-                  Ver Números Ganadores y Premios Especiales
+                <Button className="w-full sm:w-auto gold-gradient text-primary-foreground gap-2 px-6 py-4 sm:px-8 sm:py-6 text-base sm:text-lg font-bold rounded-2xl shadow-lg hover:opacity-90 transform hover:-translate-y-0.5 transition-all">
+                  <Trophy className="w-5 h-5 animate-pulse shrink-0" />
+                  <span className="text-center leading-tight">Ver Números Ganadores y Premios Especiales</span>
                 </Button>
               </Link>
             </div>

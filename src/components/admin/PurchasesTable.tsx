@@ -60,16 +60,92 @@
 
     const sendTicketEmail = async (purchase: TicketPurchase) => {
       try {
-        const { data, error } = await supabase.functions.invoke("send-ticket-email", {
-          body: { purchaseId: purchase.id },
+        const brevoApiKey = config.brevoApiKey;
+        if (!brevoApiKey) {
+          toast.error('No hay BREVO_API_KEY configurada. Agrégala en Configuración.');
+          return;
+        }
+
+        const digitCount = String(config.endNumber).length;
+        const ticketNumbers = purchase.ticketNumbers
+          .map((n) => String(n).padStart(digitCount, "0"))
+          .join(", ");
+        const eventName = config.title || "Colombia Gana";
+        const senderEmail = config.brevoSenderEmail || "noreply@colombiaga.com";
+        const senderName = config.brevoSenderName || "Colombia Gana";
+
+        const emailHtml = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tus números de rifa</title>
+  </head>
+  <body style="margin:0; padding:0; background-color:#f6f6f6; font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      <tr>
+        <td align="center" style="padding:24px 0;">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="border-collapse:collapse; background-color:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e5e7eb;">
+            <tr>
+              <td style="background: linear-gradient(90deg, #d4af37, #fcd34d); padding:20px 24px; text-align:center;">
+                <h1 style="margin:0; font-size:22px; color:#111827;">Colombia Gana</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px;">
+                <h2 style="margin:0 0 12px; font-size:18px; color:#111827;">¡Felicidades! Tu pago ha sido verificado</h2>
+                <p style="margin:0 0 12px; font-size:14px; color:#374151;">Hola <strong>${purchase.buyerName}</strong>,</p>
+                <p style="margin:0 0 12px; font-size:14px; color:#374151;">Tus números para la rifa <strong>${eventName}</strong> son:</p>
+                <p style="margin:16px 0; font-size:20px; font-weight:bold; letter-spacing:1px; color:#d4af37;">${ticketNumbers}</p>
+                <p style="margin:0 0 8px; font-size:14px; color:#374151;">Cantidad: <strong>${purchase.quantity}</strong></p>
+                <p style="margin:0 0 8px; font-size:14px; color:#374151;">Total pagado: <strong>${purchase.totalPrice}</strong></p>
+                <p style="margin:16px 0 0; font-size:12px; color:#6b7280;">Guarda este correo como comprobante. ¡Mucha suerte!</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+        `;
+
+        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "api-key": brevoApiKey,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            sender: { name: senderName, email: senderEmail },
+            to: [{ email: purchase.buyerEmail, name: purchase.buyerName }],
+            subject: `¡Tus números de rifa! ${eventName}`,
+            htmlContent: emailHtml,
+          }),
         });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        toast.success('Correo enviado exitosamente');
+
+        const responseText = await response.text();
+        if (!response.ok) {
+          console.error("Brevo error", response.status, responseText);
+          await supabase
+            .from("ticket_purchases")
+            .update({ email_error: `Brevo ${response.status}: ${responseText}` })
+            .eq("id", purchase.id);
+          throw new Error(`Brevo ${response.status}`);
+        }
+
+        await supabase
+          .from("ticket_purchases")
+          .update({ email_sent_at: new Date().toISOString(), email_error: null })
+          .eq("id", purchase.id);
+
+        toast.success("Correo enviado exitosamente");
         loadPurchases();
       } catch (error: any) {
-        console.error('Error sending email:', error);
-        toast.error(`No se pudo enviar el correo: ${error?.message || 'Error desconocido'}`);
+        console.error("Error sending email:", error);
+        toast.error(`No se pudo enviar el correo: ${error?.message || "Error desconocido"}`);
       }
     };
 

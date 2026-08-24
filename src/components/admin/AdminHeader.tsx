@@ -14,53 +14,53 @@ export function AdminHeader() {
 
   return (
     <header className="glass-card border-b border-border/50 sticky top-0 z-50">
-      <div className="container flex items-center justify-between h-16">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl gold-gradient flex items-center justify-center">
-            <Settings className="w-5 h-5 text-primary-foreground" />
+      <div className="container flex items-center justify-between gap-2 h-16">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl gold-gradient flex items-center justify-center">
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
           </div>
-          <span className="font-display text-xl gold-text">Panel Admin</span>
+          <span className="font-display text-lg sm:text-xl gold-text hidden sm:inline">Panel Admin</span>
         </div>
         
-        <nav className="flex items-center gap-2">
-          <Link to="/admin">
-            <Button variant="ghost" size="sm" className="gap-2">
+        <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
+          <Link to="/admin" className="shrink-0">
+            <Button variant="ghost" size="sm" className="gap-2 px-2 sm:px-3">
               <LayoutDashboard className="w-4 h-4" />
-              Dashboard
+              <span className="hidden sm:inline">Dashboard</span>
             </Button>
           </Link>
-          <Link to="/admin/config">
-            <Button variant="ghost" size="sm" className="gap-2">
+          <Link to="/admin/config" className="shrink-0">
+            <Button variant="ghost" size="sm" className="gap-2 px-2 sm:px-3">
               <Settings className="w-4 h-4" />
-              Configuración
+              <span className="hidden sm:inline">Configuración</span>
             </Button>
           </Link>
-          <Link to="/admin/purchases">
-            <Button variant="ghost" size="sm" className="gap-2">
+          <Link to="/admin/purchases" className="shrink-0">
+            <Button variant="ghost" size="sm" className="gap-2 px-2 sm:px-3">
               <Users className="w-4 h-4" />
-              Compradores
+              <span className="hidden sm:inline">Compradores</span>
             </Button>
           </Link>
-          <Link to="/admin/chat">
-            <Button variant="ghost" size="sm" className="gap-2">
+          <Link to="/admin/chat" className="shrink-0">
+            <Button variant="ghost" size="sm" className="gap-2 px-2 sm:px-3">
               <MessageSquare className="w-4 h-4" />
-              Chat
+              <span className="hidden sm:inline">Chat</span>
             </Button>
           </Link>
-          <Link to="/">
-            <Button variant="outline" size="sm" className="gap-2 border-primary/50 text-primary hover:bg-primary/10">
+          <Link to="/" className="shrink-0">
+            <Button variant="outline" size="sm" className="gap-2 px-2 sm:px-3 border-primary/50 text-primary hover:bg-primary/10">
               <Eye className="w-4 h-4" />
-              Ver Rifa
+              <span className="hidden sm:inline">Ver Rifa</span>
             </Button>
           </Link>
           <Button 
             variant="ghost" 
             size="sm" 
-            className="gap-2 text-destructive hover:bg-destructive/10"
+            className="gap-2 px-2 sm:px-3 text-destructive hover:bg-destructive/10 shrink-0"
             onClick={handleLogout}
           >
             <LogOut className="w-4 h-4" />
-            Salir
+            <span className="hidden sm:inline">Salir</span>
           </Button>
         </nav>
       </div>

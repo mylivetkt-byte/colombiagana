@@ -1,5 +1,28 @@
--- Migration to add QR code URL field to payment methods
--- This stores a public URL to a QR code image generated externally
+-- Migration: QR Code Storage Setup for Payment Methods
+-- Purpose: Enable uploading and storing QR code images for payment methods
 
--- Since payment_methods is a JSON column, no DB changes needed
--- Simply add the 'qrUrl' field to PaymentMethod type
+-- ============================================
+-- REQUIRED: Create storage bucket in Supabase
+-- ============================================
+-- Execute this command to create the bucket:
+-- supabase storage buckets create payment-method-qr-codes --public
+--
+-- Or via Dashboard:
+-- 1. Go to Storage -> Buckets
+-- 2. Create bucket: payment-method-qr-codes
+-- 3. Set as PUBLIC
+--
+-- ============================================
+-- Storage structure:
+-- ============================================
+-- Bucket: payment-method-qr-codes
+-- Path pattern: qr-{methodId}-{timestamp}.{ext}
+-- Access: Public
+-- Max size: 5MB (enforced in frontend)
+--
+-- ============================================
+-- Database notes:
+-- ============================================
+-- QR image URLs are stored in payment_methods JSONB column
+-- Fields: qrImageUrl (string), qrImageId (string)
+-- No schema changes needed because JSONB is flexible

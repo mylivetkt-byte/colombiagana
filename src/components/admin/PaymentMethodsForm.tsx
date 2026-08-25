@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { PaymentMethod } from '@/types/raffle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash2, CreditCard, Building2, Smartphone, Copy } from 'lucide-react';
+import { Plus, Trash2, CreditCard, Building2, Smartphone, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PaymentMethodsFormProps {
   paymentMethods: PaymentMethod[];
@@ -28,6 +29,10 @@ const paymentTypeLabels = {
 
 export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsFormProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [currentImage, setCurrentImage] = useState<File | null>(null);
+  const [currentImageId, setCurrentImageId] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addPaymentMethod = () => {
     const newMethod: PaymentMethod = {
@@ -39,7 +44,8 @@ export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsF
       bankName: '',
       instructions: '',
       isActive: true,
-      qrUrl: '',
+      qrImageUrl: '',
+      qrImageId: '',
     };
     onChange([...paymentMethods, newMethod]);
     setExpandedId(newMethod.id);
@@ -61,11 +67,71 @@ export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsF
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const copyQRUrl = (url: string) => {
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success('URL del QR copiado');
-    });
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>, methodId: string) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('La imagen no debe superar 5MB');
+        return;
+      }
+      setCurrentImage(file);
+      setCurrentImageId(methodId);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
   };
+
+  const uploadQRImage = async (methodId: string) => {
+    if (!currentImage) return null;
+
+    try {
+      const fileExt = currentImage.name.split('.').pop();
+      const fileName = `qr-${methodId}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('payment-method-qr-codes')
+        .upload(fileName, currentImage, { upsert: true });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Error al subir la imagen del QR');
+        return null;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('payment-method-qr-codes')
+        .getPublicUrl(fileName);
+
+      toast.success('Imagen QR subida correctamente');
+      return publicUrl;
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al procesar la imagen');
+      return null;
+    }
+  };
+
+  const saveQRImage = async (methodId: string) => {
+    if (!currentImage) return;
+
+    const qrUrl = await uploadQRImage(methodId);
+    if (qrUrl) {
+      updateMethod(methodId, { qrImageUrl: qrUrl, qrImageId: `qr-${methodId}` });
+      setCurrentImage(null);
+      setPreviewUrl(null);
+    }
+  };
+
+  const removeImage = () => {
+    setCurrentImage(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  if (expandedId === currentImageId && previewUrl) {
+    URL.revokeObjectURL(previewUrl);
+  }
 
   return (
     <div className="space-y-4">
@@ -213,55 +279,129 @@ export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsF
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
-                        <Label>Código QR (URL)</Label>
-                        {method.qrUrl ? (
-                          <div className="space-y-2">
-                            <div className="flex gap-2">
-                              <Input
-                                value={method.qrUrl}
-                                onChange={(e) =>
-                                  updateMethod(method.id, { qrUrl: e.target.value })
-                                }
-                                className="bg-input flex-1"
+                        <Label>Código QR (Imagen)</Label>
+                        {method.qrImageUrl ? (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <img 
+                                src={method.qrImageUrl} 
+                                alt="QR Code" 
+                                className="w-16 h-16 object-cover rounded-lg border border-border"
                               />
+                              <div>
+                                <p className="text-sm text-muted-foreground">
+                                  QR actual cargado
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageSelect(e, method.id)}
+                              className="hidden"
+                            />
+                            
+                            {previewUrl && currentImageId === method.id && (
+                              <div className="relative inline-block">
+                                <img 
+                                  src={previewUrl} 
+                                  alt="Preview QR" 
+                                  className="w-20 h-20 object-cover rounded-lg border border-border"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute -top-2 -right-2 h-6 w-6"
+                                  onClick={removeImage}
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            )}
+                            
+                            {previewUrl && currentImageId === method.id && (
                               <Button
                                 type="button"
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => copyQRUrl(method.qrUrl || '')}
+                                className="w-full"
+                                onClick={() => saveQRImage(method.id)}
                               >
-                                <Copy className="w-4 h-4" />
+                                <Upload className="w-4 h-4 mr-2" />
+                                Guardar QR
                               </Button>
-                              <a 
-                                href={method.qrUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
+                            )}
+                            
+                            {!previewUrl && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full"
                               >
-                                <Button type="button" variant="outline" size="icon">
-                                  🔗
-                                </Button>
-                              </a>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Pega una URL que genere un QR (ej: <code>https://api.qrserver.com/v1/create-qr-code/?data=...</code>)
-                            </p>
+                                <ImageIcon className="w-4 h-4 mr-2" />
+                                Cambiar Imagen QR
+                              </Button>
+                            )}
                           </div>
                         ) : (
                           <>
-                            <Input
-                              type="url"
-                              value={method.qrUrl || ''}
-                              onChange={(e) =>
-                                updateMethod(method.id, { qrUrl: e.target.value })
-                              }
-                              placeholder="https://api.qrserver.com/v1/create-qr-code/?data=..."
-                              className="bg-input"
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageSelect(e, method.id)}
+                              className="hidden"
                             />
-                            <p className="text-xs text-muted-foreground">
-                              URL que genere un código QR para mostrar al comprador
-                            </p>
+                            
+                            {previewUrl && currentImageId === method.id && (
+                              <div className="relative inline-block">
+                                <img 
+                                  src={previewUrl} 
+                                  alt="Preview QR" 
+                                  className="w-20 h-20 object-cover rounded-lg border border-border"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute -top-2 -right-2 h-6 w-6"
+                                  onClick={removeImage}
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            )}
+                            
+                            {previewUrl && currentImageId === method.id && (
+                              <Button
+                                type="button"
+                                className="w-full"
+                                onClick={() => saveQRImage(method.id)}
+                              >
+                                <Upload className="w-4 h-4 mr-2" />
+                                Guardar QR
+                              </Button>
+                            )}
+                            
+                            {!previewUrl && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full"
+                              >
+                                <ImageIcon className="w-4 h-4 mr-2" />
+                                Subir Imagen QR
+                              </Button>
+                            )}
                           </>
                         )}
+                        
+                        <p className="text-xs text-muted-foreground">
+                          Sube una imagen del código QR para mostrar al comprador
+                        </p>
                       </div>
                     </div>
                   </div>

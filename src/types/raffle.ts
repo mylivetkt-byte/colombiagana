@@ -46,17 +46,17 @@ export interface RaffleConfig {
 }
 
 export interface TicketPurchase {
-  id: string;
-  raffleId: string;
+  id?: string;
+  raffleId?: string;
   buyerName: string;
   buyerEmail: string;
   buyerPhone: string;
   ticketNumbers: number[];
   quantity: number;
   totalPrice: number;
-  purchaseDate: string;
-  paymentStatus: 'pending' | 'verified' | 'cancelled';
-  paymentMethod: string;
+  purchaseDate?: string;
+  paymentStatus?: 'pending' | 'verified' | 'cancelled';
+  paymentMethod?: string;
   paymentImageUrl?: string;
   emailSentAt?: string;
   emailError?: string;

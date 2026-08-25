@@ -3,16 +3,17 @@ import { useState, useRef } from 'react';
 import { TicketPurchase, PaymentMethod } from '@/types/raffle';
 import { useRaffleStore } from '@/store/raffleStore';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Copy, CreditCard, Wallet, Building2, Smartphone, Upload, Loader2, Image as ImageIcon, X, ExternalLink } from 'lucide-react';
+import { CheckCircle, Copy, CreditCard, Wallet, Building2, Smartphone, Upload, Loader2, Image as ImageIcon, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PaymentConfirmationProps {
   purchase: TicketPurchase;
   onBack: () => void;
+  onPurchaseSaved: (purchase: TicketPurchase) => void;
 }
 
-export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationProps) {
+export function PaymentConfirmation({ purchase, onBack, onPurchaseSaved }: PaymentConfirmationProps) {
   const { config } = useRaffleStore();
   const [isUploading, setIsUploading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -64,7 +65,7 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
 
     try {
       const fileExt = selectedImage.name.split('.').pop();
-      const fileName = `${purchase.id}-${Date.now()}.${fileExt}`;
+      const fileName = `payment-${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('payment-proofs')
@@ -81,19 +82,44 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
         .from('payment-proofs')
         .getPublicUrl(fileName);
 
-      const { error: updateError } = await supabase.rpc('submit_payment_proof', {
-        p_purchase_id: purchase.id,
-        p_image_url: publicUrl
-      });
+      const { data: raffleConfig } = await supabase
+        .from('raffle_config')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
 
-      if (updateError) {
-        console.error('Update error:', updateError);
-        toast.error('Error al guardar el comprobante');
+      if (!raffleConfig?.id) {
+        toast.error('No se encontró la configuración de la rifa');
+        setIsUploading(false);
+        return;
+      }
+
+      const { data: savedPurchase, error: saveError } = await supabase
+        .from('ticket_purchases')
+        .insert({
+          raffle_id: raffleConfig.id,
+          buyer_name: purchase.buyerName,
+          buyer_email: purchase.buyerEmail,
+          buyer_phone: purchase.buyerPhone,
+          ticket_numbers: purchase.ticketNumbers,
+          quantity: purchase.quantity,
+          total_price: purchase.totalPrice,
+          payment_status: 'pending',
+          payment_method: 'pending',
+          payment_image_url: publicUrl
+        })
+        .select()
+        .single();
+
+      if (saveError) {
+        console.error('Error saving purchase:', saveError);
+        toast.error('Error al guardar la compra');
         setIsUploading(false);
         return;
       }
 
       toast.success('¡Comprobante enviado! Te notificaremos cuando sea verificado.');
+      onPurchaseSaved(savedPurchase);
       removeImage();
       onBack();
     } catch (error) {
@@ -109,7 +135,7 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
   const getPaymentIcon = (type: string) => {
     switch (type) {
       case 'bank_transfer': return Building2;
-      case 'mobile_payment': return Smartphone;
+      case 'mobile_payment': return Wallet;
       default: return CreditCard;
     }
   };

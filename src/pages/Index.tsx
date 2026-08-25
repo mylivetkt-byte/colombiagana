@@ -30,16 +30,24 @@ export default function Index() {
     setCompletedPurchase(purchase);
   };
 
+  const handlePurchaseSaved = (purchase: TicketPurchase) => {
+    setCompletedPurchase(purchase);
+  };
+
   const handleNewPurchase = () => {
     setCompletedPurchase(null);
     setSelectedQuantity(null);
   };
 
-  if (completedPurchase) {
+  if (completedPurchase?.id) {
     return (
       <div className="min-h-screen py-20">
         <div className="container">
-          <PaymentConfirmation purchase={completedPurchase} onBack={handleNewPurchase} />
+          <PaymentConfirmation 
+            purchase={completedPurchase} 
+            onBack={handleNewPurchase}
+            onPurchaseSaved={handlePurchaseSaved}
+          />
         </div>
       </div>
     );
@@ -63,7 +71,7 @@ export default function Index() {
           </section>
 
           {/* Purchase Section - Solo se muestra si se ha seleccionado un plan */}
-          {selectedQuantity !== null && (
+          {selectedQuantity !== null && !completedPurchase && (
             <section id="purchase-section" className="py-16 container transition-all animate-fade-in">
               <div className="max-w-lg mx-auto">
                 <PurchaseForm

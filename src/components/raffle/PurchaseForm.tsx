@@ -7,7 +7,6 @@ import { TicketPurchase } from '@/types/raffle';
 import { Loader2, CheckCircle, Mail, Phone, User, Ticket } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatMoney } from '@/lib/format';
-import { supabase } from '@/integrations/supabase/client';
 
 interface PurchaseFormProps {
   selectedQuantity: number;
@@ -45,7 +44,6 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
     setIsLoading(true);
     
     try {
-      // Generar números aleatorios al momento de la compra
       const assignedNumbers = generateRandomNumbers(selectedQuantity);
       
       if (assignedNumbers.length !== selectedQuantity) {
@@ -54,65 +52,18 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
         return;
       }
 
-      // Guardar en la base de datos
-      const { data: raffleConfig, error: configError } = await supabase
-        .from('raffle_config')
-        .select('id')
-        .limit(1)
-        .maybeSingle();
-
-      if (configError) {
-        console.error('Error loading raffle config:', configError);
-        toast.error('Error al cargar la configuración de la rifa');
-        setIsLoading(false);
-        return;
-      }
-
-      if (!raffleConfig?.id) {
-        toast.error('No hay configuración de rifa. Contacta al administrador.');
-        setIsLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('ticket_purchases')
-        .insert({
-          raffle_id: raffleConfig.id,
-          buyer_name: formData.name,
-          buyer_email: formData.email,
-          buyer_phone: formData.phone,
-          ticket_numbers: assignedNumbers,
-          quantity: selectedQuantity,
-          total_price: getPrice(),
-          payment_status: 'pending',
-          payment_method: 'pending'
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error saving purchase:', error);
-        const msg = error.message || 'Error desconocido';
-        toast.error(`Error al guardar la compra: ${msg}`);
-        setIsLoading(false);
-        return;
-      }
-      
-      const purchase: TicketPurchase = {
-        id: data.id,
-        raffleId: data.raffle_id || '',
-        buyerName: data.buyer_name,
-        buyerEmail: data.buyer_email,
-        buyerPhone: data.buyer_phone,
-        ticketNumbers: data.ticket_numbers,
-        quantity: data.quantity,
-        totalPrice: Number(data.total_price),
-        purchaseDate: data.created_at,
-        paymentStatus: data.payment_status as 'pending' | 'verified' | 'cancelled',
-        paymentMethod: data.payment_method || 'pending'
+      const draftPurchase: TicketPurchase = {
+        buyerName: formData.name,
+        buyerEmail: formData.email,
+        buyerPhone: formData.phone,
+        ticketNumbers: assignedNumbers,
+        quantity: selectedQuantity,
+        totalPrice: getPrice(),
+        paymentStatus: 'pending',
+        paymentMethod: 'pending'
       };
       
-      onPurchaseComplete(purchase);
+      onPurchaseComplete(draftPurchase);
       toast.custom(() => (
         <div className="flex flex-col items-center gap-3 bg-card border-2 border-accent/40 shadow-2xl rounded-2xl p-6 max-w-sm mx-auto text-center animate-scale-in">
           <div className="w-16 h-16 rounded-full gold-gradient flex items-center justify-center">
@@ -121,7 +72,7 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
           <h3 className="text-xl font-display font-bold text-foreground">¡Compra realizada!</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Tu pago se está procesando. Tus boletas llegarán a{' '}
-            <strong className="text-foreground">{purchase.buyerEmail}</strong> una vez verificado el pago.
+            <strong className="text-foreground">{draftPurchase.buyerEmail}</strong> una vez verificado el pago.
           </p>
         </div>
       ), { duration: 7000 });

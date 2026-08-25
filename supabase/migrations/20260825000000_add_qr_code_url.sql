@@ -1,28 +1,4 @@
--- Migration: QR Code Storage Setup for Payment Methods
--- Purpose: Enable uploading and storing QR code images for payment methods
-
--- ============================================
--- REQUIRED: Create storage bucket in Supabase
--- ============================================
--- Execute this command to create the bucket:
--- supabase storage buckets create payment-method-qr-codes --public
---
--- Or via Dashboard:
--- 1. Go to Storage -> Buckets
--- 2. Create bucket: payment-method-qr-codes
--- 3. Set as PUBLIC
---
--- ============================================
--- Storage structure:
--- ============================================
--- Bucket: payment-method-qr-codes
--- Path pattern: qr-{methodId}-{timestamp}.{ext}
--- Access: Public
--- Max size: 5MB (enforced in frontend)
---
--- ============================================
--- Database notes:
--- ============================================
--- QR image URLs are stored in payment_methods JSONB column
--- Fields: qrImageUrl (string), qrImageId (string)
--- No schema changes needed because JSONB is flexible
+-- Migration note for QR code images in payment_methods
+-- Since payment_methods is a JSONB column inside raffle_config,
+-- QR images are stored as base64 data URLs in the qrImageBase64 field.
+-- No additional database schema changes are required.

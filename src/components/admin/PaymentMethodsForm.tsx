@@ -8,7 +8,6 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Trash2, CreditCard, Building2, Smartphone, Upload, X, Image as ImageIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface PaymentMethodsFormProps {
   paymentMethods: PaymentMethod[];
@@ -44,8 +43,7 @@ export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsF
       bankName: '',
       instructions: '',
       isActive: true,
-      qrImageUrl: '',
-      qrImageId: '',
+      qrImageBase64: '',
     };
     onChange([...paymentMethods, newMethod]);
     setExpandedId(newMethod.id);
@@ -80,44 +78,30 @@ export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsF
     }
   };
 
-  const uploadQRImage = async (methodId: string) => {
-    if (!currentImage) return null;
-
-    try {
-      const fileExt = currentImage.name.split('.').pop();
-      const fileName = `qr-${methodId}-${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('payment-method-qr-codes')
-        .upload(fileName, currentImage, { upsert: true });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        toast.error('Error al subir la imagen del QR');
-        return null;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('payment-method-qr-codes')
-        .getPublicUrl(fileName);
-
-      toast.success('Imagen QR subida correctamente');
-      return publicUrl;
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Error al procesar la imagen');
-      return null;
-    }
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
   };
 
   const saveQRImage = async (methodId: string) => {
     if (!currentImage) return;
 
-    const qrUrl = await uploadQRImage(methodId);
-    if (qrUrl) {
-      updateMethod(methodId, { qrImageUrl: qrUrl, qrImageId: `qr-${methodId}` });
+    try {
+      const base64 = await convertToBase64(currentImage);
+      updateMethod(methodId, { qrImageBase64: base64 });
+      toast.success('Imagen QR guardada correctamente');
       setCurrentImage(null);
       setPreviewUrl(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al procesar la imagen');
     }
   };
 
@@ -276,11 +260,11 @@ export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsF
 
                       <div className="space-y-2 md:col-span-2">
                         <Label>Código QR (Imagen)</Label>
-                        {method.qrImageUrl ? (
+                        {method.qrImageBase64 ? (
                           <div className="space-y-3">
                             <div className="flex items-center gap-3">
                               <img 
-                                src={method.qrImageUrl} 
+                                src={method.qrImageBase64} 
                                 alt="QR Code" 
                                 className="w-16 h-16 object-cover rounded-lg border border-border"
                               />

@@ -7,8 +7,7 @@ export interface PaymentMethod {
   bankName?: string;
   instructions?: string;
   isActive: boolean;
-  qrImageUrl?: string;
-  qrImageId?: string;
+  qrImageBase64?: string;
 }
 
 export interface PricingPlan {

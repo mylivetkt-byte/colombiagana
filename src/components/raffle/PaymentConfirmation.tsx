@@ -239,11 +239,11 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
                   </div>
 
                   {/* Código QR si está disponible */}
-                  {method.qrImageUrl && (
+                  {method.qrImageBase64 && (
                     <div className="flex items-center gap-3 pt-2 border-t border-border/30">
                       <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
                         <img 
-                          src={method.qrImageUrl} 
+                          src={method.qrImageBase64} 
                           alt="Código QR" 
                           className="w-full h-full object-contain"
                           onError={(e) => {
@@ -253,15 +253,6 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">Pago rápido</p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(method.qrImageUrl, '_blank')}
-                        >
-                          <ExternalLink className="w-3 h-3 mr-1" />
-                          Ver QR
-                        </Button>
                       </div>
                     </div>
                   )}

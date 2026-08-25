@@ -1,9 +1,9 @@
 import { formatMoney } from '@/lib/format';
 import { useState, useRef } from 'react';
-import { TicketPurchase } from '@/types/raffle';
+import { TicketPurchase, PaymentMethod } from '@/types/raffle';
 import { useRaffleStore } from '@/store/raffleStore';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Copy, CreditCard, Wallet, Upload, Loader2, Image as ImageIcon, X } from 'lucide-react';
+import { CheckCircle, Copy, CreditCard, Wallet, Building2, Smartphone, Upload, Loader2, Image as ImageIcon, X, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,8 +20,15 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copiado al portapapeles');
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success('Copiado al portapapeles');
+    });
+  };
+
+  const copyAccountNumber = (method: PaymentMethod) => {
+    if (method.accountNumber) {
+      copyToClipboard(method.accountNumber);
+    }
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +63,6 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
     setIsUploading(true);
 
     try {
-      // Subir imagen al storage
       const fileExt = selectedImage.name.split('.').pop();
       const fileName = `${purchase.id}-${Date.now()}.${fileExt}`;
       
@@ -71,13 +77,10 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
         return;
       }
 
-      // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('payment-proofs')
         .getPublicUrl(fileName);
 
-      // Guardar la URL del comprobante en la compra (RPC con SECURITY DEFINER
-      // porque los compradores son usuarios anónimos y no tienen UPDATE en ticket_purchases)
       const { error: updateError } = await supabase.rpc('submit_payment_proof', {
         p_purchase_id: purchase.id,
         p_image_url: publicUrl
@@ -91,8 +94,6 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
       }
 
       toast.success('¡Comprobante enviado! Te notificaremos cuando sea verificado.');
-      
-      // Limpiar y volver a la página principal
       removeImage();
       onBack();
     } catch (error) {
@@ -103,22 +104,29 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
     }
   };
 
-  // Usar métodos de pago configurados por el admin
   const activePaymentMethods = config.paymentMethods?.filter(pm => pm.isActive) || [];
 
   const getPaymentIcon = (type: string) => {
     switch (type) {
-      case 'bank_transfer': return CreditCard;
-      case 'mobile_payment': return Wallet;
+      case 'bank_transfer': return Building2;
+      case 'mobile_payment': return Smartphone;
       default: return CreditCard;
     }
   };
 
   const getPaymentInfo = (method: typeof activePaymentMethods[0]) => {
     if (method.type === 'bank_transfer') {
-      return `${method.bankName ? `Banco: ${method.bankName} | ` : ''}Cuenta: ${method.accountNumber} | Titular: ${method.accountHolder}`;
+      return {
+        bank: method.bankName || '',
+        account: method.accountNumber || '',
+        holder: method.accountHolder || ''
+      };
     }
-    return `${method.name}: ${method.accountNumber} | Titular: ${method.accountHolder}`;
+    return {
+      label: method.name || '',
+      account: method.accountNumber || '',
+      holder: method.accountHolder || ''
+    };
   };
 
   return (
@@ -174,26 +182,89 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
         {activePaymentMethods.length > 0 ? (
           activePaymentMethods.map((method) => {
             const IconComponent = getPaymentIcon(method.type);
-            const paymentInfo = getPaymentInfo(method);
+            const info = getPaymentInfo(method);
+            const isBankTransfer = method.type === 'bank_transfer';
+
             return (
               <div key={method.id} className="bg-card border border-border rounded-xl p-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <IconComponent className="w-5 h-5 text-primary" />
-                  <span className="font-medium">{method.name}</span>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <IconComponent className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">{method.name}</h4>
+                    <p className="text-sm text-muted-foreground">{method.type === 'bank_transfer' ? 'Transferencia Bancaria' : 'Pago Móvil'}</p>
+                  </div>
                 </div>
+
                 {method.instructions && (
-                  <p className="text-sm text-muted-foreground mb-2">{method.instructions}</p>
+                  <p className="text-sm text-muted-foreground mb-3">{method.instructions}</p>
                 )}
-                <div className="flex items-center gap-2 bg-muted rounded-lg p-2">
-                  <code className="flex-1 text-sm break-all">{paymentInfo}</code>
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="h-8 w-8 shrink-0"
-                    onClick={() => copyToClipboard(paymentInfo)}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
+
+                <div className="space-y-3">
+                  
+                  {/* Información de cuenta - mobile-first responsive */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    
+                    {/* Información del titular y cuenta */}
+                    <div className="space-y-2">
+                      {isBankTransfer && info.bank && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Banco:</span>
+                          <span className="text-sm font-medium">{info.bank}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Titular:</span>
+                        <span className="text-sm font-medium">{info.holder}</span>
+                      </div>
+                    </div>
+
+                    {/* Información de cuenta con botón de copia */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Cuenta:</span>
+                        <code className="flex-1 text-sm font-mono break-all bg-muted rounded px-2 py-1">{info.account}</code>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 shrink-0"
+                          onClick={() => copyAccountNumber(method)}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Código QR si está disponible */}
+                  {method.qrCode && (
+                    <div className="flex items-center gap-3 pt-2 border-t border-border/30">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
+                        <img 
+                          src={method.qrCode} 
+                          alt="Código QR" 
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Pago rápido</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(method.qrCode, '_blank')}
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          Ver QR
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );

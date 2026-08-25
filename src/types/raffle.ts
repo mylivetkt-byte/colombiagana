@@ -7,6 +7,7 @@ export interface PaymentMethod {
   bankName?: string;
   instructions?: string;
   isActive: boolean;
+  qrCode?: string;
 }
 
 export interface PricingPlan {

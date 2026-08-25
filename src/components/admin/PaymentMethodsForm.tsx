@@ -38,6 +38,7 @@ export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsF
       bankName: '',
       instructions: '',
       isActive: true,
+      qrCode: '',
     };
     onChange([...paymentMethods, newMethod]);
     setExpandedId(newMethod.id);
@@ -193,7 +194,7 @@ export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsF
                         />
                       </div>
 
-                      <div className="space-y-2 md:col-span-2">
+<div className="space-y-2 md:col-span-2">
                         <Label>Instrucciones Adicionales</Label>
                         <Textarea
                           value={method.instructions || ''}
@@ -205,11 +206,24 @@ export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsF
                           rows={2}
                         />
                       </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Código QR (URL)</Label>
+                        <Input
+                          value={method.qrCode || ''}
+                          onChange={(e) =>
+                            updateMethod(method.id, { qrCode: e.target.value })
+                          }
+                          placeholder="https://api.qrserver.com/v1/create-qr-code/?..."
+                          className="bg-input"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Proporciona una URL que genere un código QR visual. Puedes usar servicios gratuitos como qrserver.com
+                        </p>
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
-            );
+                );
           })}
         </div>
       )}

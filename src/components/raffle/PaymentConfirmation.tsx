@@ -15,6 +15,9 @@ interface PaymentConfirmationProps {
 
 export function PaymentConfirmation({ purchase, onBack, onPurchaseSaved }: PaymentConfirmationProps) {
   const { config } = useRaffleStore();
+  
+  console.log('[PaymentConfirmation] Rendering with config.paymentMethods:', config.paymentMethods);
+  
   const [isUploading, setIsUploading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -130,7 +133,7 @@ export function PaymentConfirmation({ purchase, onBack, onPurchaseSaved }: Payme
     }
   };
 
-  const activePaymentMethods = config.paymentMethods?.filter(pm => pm.isActive) || [];
+  const activePaymentMethods = (Array.isArray(config.paymentMethods) ? config.paymentMethods : []).filter((pm): pm is PaymentMethod => pm && pm.isActive);
 
   const getPaymentIcon = (type: string) => {
     switch (type) {
@@ -140,7 +143,7 @@ export function PaymentConfirmation({ purchase, onBack, onPurchaseSaved }: Payme
     }
   };
 
-  const getPaymentInfo = (method: typeof activePaymentMethods[0]) => {
+  const getPaymentInfo = (method: PaymentMethod) => {
     if (method.type === 'bank_transfer') {
       return {
         bank: method.bankName || '',
@@ -149,7 +152,6 @@ export function PaymentConfirmation({ purchase, onBack, onPurchaseSaved }: Payme
       };
     }
     return {
-      label: method.name || '',
       account: method.accountNumber || '',
       holder: method.accountHolder || ''
     };

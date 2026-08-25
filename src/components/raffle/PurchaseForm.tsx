@@ -40,6 +40,7 @@ export function PurchaseForm({ selectedQuantity, onPurchaseComplete }: PurchaseF
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[PurchaseForm] handleSubmit called, formData:', formData);
     
     setIsLoading(true);
     

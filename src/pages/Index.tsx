@@ -39,7 +39,7 @@ export default function Index() {
     setSelectedQuantity(null);
   };
 
-  if (completedPurchase?.id) {
+  if (completedPurchase) {
     return (
       <div className="min-h-screen py-20">
         <div className="container">

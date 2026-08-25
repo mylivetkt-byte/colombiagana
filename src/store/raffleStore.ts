@@ -111,7 +111,17 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
             currency: data.currency,
             isActive: data.is_active,
             specifications: data.specifications || [],
-            paymentMethods: (data as any).payment_methods || [],
+            paymentMethods: (() => {
+              const pm = (data as any).payment_methods;
+              if (Array.isArray(pm)) return pm;
+              if (typeof pm === 'string') {
+                try {
+                  const parsed = JSON.parse(pm);
+                  if (Array.isArray(parsed)) return parsed;
+                } catch {}
+              }
+              return [];
+            })(),
             plans: plans,
             brevoApiKey: data.brevo_api_key || undefined,
             brevoSenderEmail: data.brevo_sender_email || undefined,

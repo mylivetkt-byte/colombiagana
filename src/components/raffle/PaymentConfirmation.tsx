@@ -224,17 +224,21 @@ export function PaymentConfirmation({ purchase, onBack }: PaymentConfirmationPro
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">Cuenta:</span>
-                        <code className="flex-1 text-sm font-mono break-all bg-muted rounded px-2 py-1">{info.account}</code>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 shrink-0"
-                          onClick={() => copyAccountNumber(method)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
+                        <code className="flex-1 text-sm font-mono break-all bg-muted rounded px-2 py-1 select-all">{info.account}</code>
                       </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-auto px-2 text-xs shrink-0 select-none"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          copyAccountNumber(method);
+                        }}
+                      >
+                        <Copy className="w-3 h-3 mr-1" /> Copiar cuenta
+                      </Button>
                     </div>
                   </div>
 

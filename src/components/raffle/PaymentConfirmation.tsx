@@ -273,7 +273,7 @@ export function PaymentConfirmation({ purchase, onBack, onPurchaseSaved }: Payme
                   {/* Código QR si está disponible */}
                   {method.qrImageBase64 && (
                     <div className="flex items-center gap-3 pt-2 border-t border-border/30">
-                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
+                      <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted border border-border">
                         <img 
                           src={method.qrImageBase64} 
                           alt="Código QR" 
@@ -283,8 +283,9 @@ export function PaymentConfirmation({ purchase, onBack, onPurchaseSaved }: Payme
                           }}
                         />
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Pago rápido</p>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground mb-1">Pago rápido con QR</p>
+                        <p className="text-xs text-muted-foreground">Escanea el código para pagar instantly</p>
                       </div>
                     </div>
                   )}

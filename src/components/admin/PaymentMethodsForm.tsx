@@ -129,10 +129,6 @@ export function PaymentMethodsForm({ paymentMethods, onChange }: PaymentMethodsF
     }
   };
 
-  if (expandedId === currentImageId && previewUrl) {
-    URL.revokeObjectURL(previewUrl);
-  }
-
   return (
     <div className="space-y-4">
       {paymentMethods.length === 0 ? (

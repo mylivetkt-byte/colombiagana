@@ -17,18 +17,38 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CheckCircle, XCircle, Clock, Mail, Copy, Image as ImageIcon } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { CheckCircle, XCircle, Clock, Mail, Copy, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
-  const { config, updatePurchaseStatus, loadPurchases } = useRaffleStore();
+  const { config, updatePurchaseStatus, loadPurchases, deletePurchase } = useRaffleStore();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const digitCount = String(config.endNumber).length;
 
   const handleVerify = (id: string) => {
     updatePurchaseStatus(id, 'verified');
     toast.success('Pago verificado. Abrí el correo para enviar la boleta.');
+  };
+
+  const handleDelete = async (id: string) => {
+    const success = await deletePurchase(id);
+    if (success) {
+      toast.success('Compra eliminada. Los números vuelven a estar disponibles.');
+    } else {
+      toast.error('Error al eliminar la compra');
+    }
   };
 
   const handleCancel = (id: string) => {
@@ -211,6 +231,28 @@ export function PurchasesTable({ purchases }: { purchases: TicketPurchase[] }) {
             <Copy className="w-4 h-4 mr-1" />
             Copiar números
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" variant="destructive" className="w-full">
+                <Trash2 className="w-4 h-4 mr-1" />
+                Eliminar
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Eliminar esta compra?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta acción no se puede deshacer. Los números {purchase.ticketNumbers.map((n: number) => String(n).padStart(digitCount, '0')).join(', ')} volverán a estar disponibles.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => handleDelete(purchase.id)} className="bg-destructive hover:bg-destructive/90">
+                  Sí, eliminar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       );
     }

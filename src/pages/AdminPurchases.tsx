@@ -20,6 +20,7 @@ export default function AdminPurchases() {
 
   const match = (p: any, q: string) =>
     !q ||
+    p.ticketNumber.toString().includes(q.toLowerCase()) ||
     p.buyerName.toLowerCase().includes(q.toLowerCase()) ||
     p.buyerEmail.toLowerCase().includes(q.toLowerCase()) ||
     p.buyerPhone.toLowerCase().includes(q.toLowerCase());
@@ -76,7 +77,7 @@ export default function AdminPurchases() {
               <div className="relative w-full sm:max-w-xs">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar en verificados"
+                  placeholder="Buscar número, nombre, email o teléfono"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="pl-9"

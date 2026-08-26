@@ -66,13 +66,15 @@ export function SpecialPrizesForm() {
       toast.error('Completa la descripción del premio');
       return;
     }
-    const ticketNumber = form.ticketNumber
-      ? parseInt(form.ticketNumber)
-      : calculateAutoAssignedNumber();
     
-    if (isNaN(ticketNumber) || ticketNumber < config.startNumber || ticketNumber > config.endNumber) {
-      toast.error(`El número debe estar entre ${config.startNumber} y ${config.endNumber}`);
-      return;
+    // Si no hay número, guardar como null (Premio Mayor pendiente)
+    let ticketNumber: number | null = null;
+    if (form.ticketNumber) {
+      ticketNumber = parseInt(form.ticketNumber);
+      if (isNaN(ticketNumber) || ticketNumber < config.startNumber || ticketNumber > config.endNumber) {
+        toast.error(`El número debe estar entre ${config.startNumber} y ${config.endNumber}`);
+        return;
+      }
     }
     const ok = await addSpecialPrize({
       ticketNumber,

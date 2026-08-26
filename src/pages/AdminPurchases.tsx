@@ -8,11 +8,12 @@ import { Search } from 'lucide-react';
 type SentFilter = 'all' | 'sent' | 'pending';
 
 export default function AdminPurchases() {
-  const { purchases, loadPurchases } = useRaffleStore();
+  const { purchases, loadPurchases, loadConfig } = useRaffleStore();
   const [query, setQuery] = useState('');
   const [sentFilter, setSentFilter] = useState<SentFilter>('all');
 
   useEffect(() => {
+    loadConfig();
     loadPurchases();
   }, []);
 

@@ -20,7 +20,7 @@ export default function AdminPurchases() {
 
   const match = (p: any, q: string) =>
     !q ||
-    (p.ticketNumber?.toString() || '').includes(q.toLowerCase()) ||
+    p.ticketNumbers.some((n: number) => n.toString().includes(q)) ||
     p.buyerName.toLowerCase().includes(q.toLowerCase()) ||
     p.buyerEmail.toLowerCase().includes(q.toLowerCase()) ||
     p.buyerPhone.toLowerCase().includes(q.toLowerCase());
